@@ -31,6 +31,7 @@ OBJS_CONFIG_LIB = \
         auto_show_config.o \
         auto_show_flags.o \
         auto_show_version.o \
+        BlackbodySED.o \
         BlockSolve.o \
         calcdiss.o \
         calc_dt.o \
@@ -126,6 +127,7 @@ OBJS_CONFIG_LIB = \
         CreateSmoothedDarkMatterFields.o \
         CreateSUBlingList.o \
         CreateFluxes.o \
+        CrossSectionSED.o \
         InitializeFluxes.o \
         DeleteFluxes.o \
         DeleteSUBlingList.o \
@@ -664,6 +666,7 @@ OBJS_CONFIG_LIB = \
         mg_relax.o \
         mg_restrict.o \
         mkl_st1.o \
+        MonochromaticSED.o \
         Mpich_V1_Dims_create.o \
         multi_cool.o \
         MultigridSolver.o \
@@ -772,6 +775,7 @@ OBJS_CONFIG_LIB = \
         s66_st1.o \
         s90_st1.o \
 	SearchUtilities.o \
+        SED_integral.o \
         SedovBlastInitialize.o \
         select_fft.o \
 	SetBoundaryConditions.o \
