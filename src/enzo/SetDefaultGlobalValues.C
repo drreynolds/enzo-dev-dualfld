@@ -363,7 +363,9 @@ int SetDefaultGlobalValues(TopGridData &MetaData)
   RadiativeTransferFLD        = 0;                 // off
   ImplicitProblem             = 0;                 // off
   StarMakerEmissivityField    = 0;                 // off
-  uv_param                    = 1.1e-5;            // consistent with Razoumov Norman 2002
+  // uv_param                    = 1.1e-5;            // consistent with Razoumov Norman 2002
+  UV_parameter                = 0.0;               // Razoumov and Norman Ap.J. 2002 June 20 5.0e-04
+  Xr_parameter                = 0.0;               
 
   MultiSpecies                = FALSE;             // off
   NoMultiSpeciesButColors     = FALSE;             // off

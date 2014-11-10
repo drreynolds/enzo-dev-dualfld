@@ -282,9 +282,15 @@ int ReadParameterFile(FILE *fptr, TopGridData &MetaData, float *Initialdt)
 #ifdef EMISSIVITY
     ret += sscanf(line, "StarMakerEmissivityField = %"ISYM, 
 		  &StarMakerEmissivityField);
-    ret += sscanf(line, "uv_param = %"FSYM, &uv_param);
+    // ret += sscanf(line, "uv_param = %"FSYM, &uv_param);
 #endif
 
+    ret += sscanf(line, "UV_parameter           = %"FSYM,
+                  &UV_parameter);
+
+    ret += sscanf(line, "Xr_parameter           = %"FSYM,
+                  &Xr_parameter);
+ 
     ret += sscanf(line, "ParticleBoundaryType   = %"ISYM,
 		  &MetaData.ParticleBoundaryType);
     ret += sscanf(line, "NumberOfParticles      = %"PISYM,

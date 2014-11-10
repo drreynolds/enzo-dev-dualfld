@@ -2059,6 +2059,48 @@ int zEulerSweep(int j, int NumberOfSubgrids, fluxes *SubgridFluxes[],
 		   float CosmologySimulationOmegaBaryonNow,
 		   int *Offset, int level);
 
+  /* Dual FLD test problems: initialize grid (SUCCESS or FAIL) */
+  int DualRadConstTestInitializeGrid(float DensityConstant, float VxConstant, 
+				     float VyConstant, float VzConstant, 
+				     float IEConstant, float XrConstant, 
+				     float UVConstant, float InitialFractionHII, 
+				     float InitialFractionHeII, 
+				     float InitialFractionHeIII, int local);
+
+  int DualCosmoIonizationInitializeGrid(float VxConstant, float VyConstant, 
+					float VzConstant, float IEConstant, 
+					float XrConstant, float UVConstant, 
+					float InitialFractionHII, 
+					float InitialFractionHeII, 
+					float InitialFractionHeIII, 
+					float OmegaBaryonNow, int local);
+
+  int DualRHIonizationTestInitializeGrid(float DensityConstant, float VxConstant, 
+					 float VyConstant, float VzConstant, 
+					 float IEConstant, float XrConstant, 
+					 float UVConstant, float InitialFractionHII, 
+					 float InitialFractionHeII, 
+					 float InitialFractionHeIII, int local);
+
+  int DualRHIonizationSteepInitializeGrid(float NumDensity, float DensityRadius, 
+					  float DensityCenter0, float DensityCenter1, 
+					  float DensityCenter2, float VxConstant, 
+					  float VyConstant, float VzConstant, 
+					  float IEConstant, float XrConstant, 
+					  float UVConstant, float InitialFractionHII, 
+					  float InitialFractionHeII, 
+					  float InitialFractionHeIII, int local);
+
+  int DualRHIonizationClumpInitializeGrid(float NumDensityIn, float NumDensityOut, 
+					  float VxConst, float VyConst, 
+					  float VzConst, float IEConstIn, 
+					  float IEConstOut, float XrConstant, 
+					  float UVConstant, float InitFracHII, 
+					  float InitFracHeII, float InitFracHeIII, 
+					  float ClumpCenterX, float ClumpCenterY,
+					  float ClumpCenterZ, float ClumpRadius,
+					  int   local);
+
   /* CosmologySimulation: initialize partitioned nested grids. */
   int NestedCosmologySimulationInitializeGrid(
 			  int   InitialGridNumber,

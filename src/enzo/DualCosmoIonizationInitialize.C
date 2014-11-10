@@ -1,0 +1,238 @@
+/***********************************************************************
+/
+/  INITIALIZE DUAL FLD TEST -- COSMOLOGY TEST IN A HOMOGENEOUS MEDIUM
+/
+/  written by: Daniel Reynolds
+/  date:       November 2014
+/  modified1:
+/
+/  PURPOSE:
+/    Set up a uniform cosmological HII region ionization test
+/
+/  RETURNS: SUCCESS or FAIL
+/
+************************************************************************/
+ 
+// This routine intializes a new simulation based on the parameter file.
+ 
+#include <string.h>
+#include <stdio.h>
+#include <math.h>
+#include "ErrorExceptions.h"
+#include "macros_and_parameters.h"
+#include "typedefs.h"
+#include "global_data.h"
+#include "Fluxes.h"
+#include "GridList.h"
+#include "ExternalBoundary.h"
+#include "Grid.h"
+#include "Hierarchy.h"
+#include "LevelHierarchy.h"
+#include "TopGridData.h"
+#include "phys_constants.h"
+
+ 
+// default constants
+#define DEFAULT_MU 0.6       // mean molecular mass
+#define MIN_TEMP 1.0         // minimum temperature [K]
+#define MAX_INITIAL_GRIDS 10
+
+
+// function prototypes
+int InitializeRateData(FLOAT Time);
+
+ 
+int DualCosmoIonizationInitialize(FILE *fptr, FILE *Outfptr,
+				  HierarchyEntry &TopGrid, 
+				  TopGridData &MetaData, int local)
+{
+#ifdef TRANSFER
+  if (MyProcessorNumber == ROOT_PROCESSOR)
+    printf("Entering DualCosmoIonizationInitialize routine\n");
+
+  char *kphHIName    = "HI_kph";
+  char *kphHeIName   = "HeI_kph";
+  char *kphHeIIName  = "HeII_kph";
+  char *gammaName    = "PhotoGamma";
+  char *kdissH2IName = "H2I_kdiss";
+  char *DensName     = "Density";
+  char *TEName       = "TotalEnergy";
+  char *GEName       = "GasEnergy";
+  char *Vel1Name     = "x-velocity";
+  char *Vel2Name     = "y-velocity";
+  char *Vel3Name     = "z-velocity";
+  char *RadName0     = "Xray_Radiation";
+  char *RadName1     = "UV_Radiation";
+  char *HIName       = "HI_Density";
+  char *HIIName      = "HII_Density";
+  char *HeIName      = "HeI_Density";
+  char *HeIIName     = "HeII_Density";
+  char *HeIIIName    = "HeIII_Density";
+  char *DeName       = "Electron_Density";
+  char *EtaName      = "Emissivity";
+ 
+  // local declarations
+  char  line[MAX_LINE_LENGTH];
+  int   dim, ret;
+ 
+  // Setup and parameters:
+  float X0Velocity           = 0.0;
+  float X1Velocity           = 0.0;
+  float X2Velocity           = 0.0;
+  float Temperature          = 1e4;
+  float UVRadiation          = -1.0;
+  float XrRadiation          = -1.0;
+  float InitialFractionHII   = 0.0;
+  float InitialFractionHeII  = 0.0;
+  float InitialFractionHeIII = 0.0;
+  float OmegaBaryonNow       = 0.2;
+  int   use_xray             = 0;
+  int   use_uv               = 0;
+
+  // overwrite input from RadHydroParamFile file, if it exists
+  if (MetaData.RadHydroParameterFname != NULL) {
+    FILE *RHfptr;
+    if ((RHfptr = fopen(MetaData.RadHydroParameterFname, "r")) != NULL) {
+      while (fgets(line, MAX_LINE_LENGTH, RHfptr) != NULL) {
+	ret = 0;
+	// read relevant problem parameters
+	ret += sscanf(line, "DualFLD_Velocity = %"FSYM" %"FSYM" %"FSYM,
+		      &X0Velocity, &X1Velocity, &X2Velocity);
+	ret += sscanf(line, "DualFLD_Temperature = %"FSYM, &Temperature);
+	ret += sscanf(line, "DualFLD_UVRadiationEnergy = %"FSYM, &UVRadiation);
+	ret += sscanf(line, "DualFLD_XrayRadiationEnergy = %"FSYM, &XrRadiation);
+	ret += sscanf(line, "DualFLD_InitialFractionHII = %"FSYM, &InitialFractionHII);
+	if (!RadiativeTransferHydrogenOnly) {
+	  ret += sscanf(line, "DualFLD_InitialFractionHeII = %"FSYM, &InitialFractionHeII);
+	  ret += sscanf(line, "DualFLD_InitialFractionHeIII = %"FSYM, &InitialFractionHeIII);
+	}
+	ret += sscanf(line, "DualFLD_OmegaBaryonNow = %"FSYM, &OmegaBaryonNow);
+
+	ret += sscanf(line, "DualFLDUseXray = %"ISYM, &use_xray);
+	ret += sscanf(line, "DualFLDUseUV = %"ISYM, &use_uv);
+      } // end input from parameter file
+      fclose(RHfptr);
+    }
+  }
+
+  /* error checking */
+  if (use_xray && (XrRadiation < 0.0)) {
+    if (MyProcessorNumber == ROOT_PROCESSOR)
+      fprintf(stderr, "warning: x-ray radiation enabled, but specified value %f is illegal; overriding input.\n", 
+	      XrRadiation);
+    XrRadiation = 1.e-30;
+  }
+  if (!use_xray && (XrRadiation >= 0.0)) {
+    if (MyProcessorNumber == ROOT_PROCESSOR)
+      fprintf(stderr, "warning: x-ray radiation value specified, but field not engaged; disabling.\n");
+    XrRadiation = -1.0;
+  }
+  if (use_uv && (UVRadiation < 0.0)) {
+    if (MyProcessorNumber == ROOT_PROCESSOR)
+      fprintf(stderr, "warning: uv radiation enabled, but specified value %f is illegal; overriding input.\n", 
+	      UVRadiation);
+    UVRadiation = 1.e-30;
+  }
+  if (!use_uv && (UVRadiation >= 0.0)) {
+    if (MyProcessorNumber == ROOT_PROCESSOR)
+      fprintf(stderr, "warning: uv radiation value specified, but field not engaged; disabling.\n");
+    UVRadiation = -1.0;
+  }
+
+  // set up CoolData object if not already set up
+  if (CoolData.ceHI == NULL) 
+    if (InitializeRateData(MetaData.Time) == FAIL) {
+      fprintf(stderr,"Error in InitializeRateData.\n");
+      return FAIL;
+    }
+
+  // convert input temperature to internal energy
+  Temperature = max(Temperature,MIN_TEMP); // enforce minimum
+  float nH, HI, HII, nHe, HeI, HeII, HeIII, ne, num_dens, mu;
+  if (RadiativeTransferHydrogenOnly) {
+    HI = 1.0 - InitialFractionHII;
+    HII = InitialFractionHII;
+    ne = HII;
+    num_dens = HI + HII + ne;
+    mu = 1.0/num_dens;
+  } else {
+    nH = CoolData.HydrogenFractionByMass;
+    nHe = 1.0 - CoolData.HydrogenFractionByMass;
+    HI = nH*(1.0 - InitialFractionHII);
+    HII = nH*InitialFractionHII;
+    HeII = nHe*InitialFractionHeII;
+    HeIII = nHe*InitialFractionHeIII;
+    HeI = nHe - HeII - HeIII;
+    ne = HII + HeII/4.0 + HeIII/2.0;
+    num_dens = 0.25*(HeI + HeII + HeIII) + HI + HII + ne;
+    mu = 1.0/num_dens;
+  }
+  // compute the internal energy
+  float IEnergy = kboltz*Temperature/mu/mh/(Gamma-1.0);	
+
+  // set up the grid(s) on this level
+  HierarchyEntry *Temp = &TopGrid;
+  while (Temp != NULL) {
+    if (Temp->GridData->DualCosmoIonizationInitializeGrid(
+		        X0Velocity, X1Velocity, X2Velocity, 
+			IEnergy, XrRadiation, UVRadiation, 
+			InitialFractionHII, InitialFractionHeII, 
+			InitialFractionHeIII, OmegaBaryonNow, local) == FAIL) {
+      fprintf(stderr, "Error in DualCosmoIonizationInitializeGrid.\n");
+      return FAIL;
+    }
+    Temp = Temp->NextGridThisLevel;
+  }
+
+
+  // set up field names and units
+  int BaryonField = 0;
+  DataLabel[BaryonField++] = DensName;
+  DataLabel[BaryonField++] = TEName;
+  if (DualEnergyFormalism) 
+    DataLabel[BaryonField++] = GEName;
+  DataLabel[BaryonField++] = Vel1Name;
+  DataLabel[BaryonField++] = Vel2Name;
+  DataLabel[BaryonField++] = Vel3Name;
+  if (XrRadiation >= 0.0)
+    DataLabel[BaryonField++] = RadName0;
+  if (UVRadiation >= 0.0)
+    DataLabel[BaryonField++] = RadName1;
+  DataLabel[BaryonField++] = DeName;
+  DataLabel[BaryonField++] = HIName;
+  DataLabel[BaryonField++] = HIIName;
+  if (!RadiativeTransferHydrogenOnly) {
+    DataLabel[BaryonField++] = HeIName;
+    DataLabel[BaryonField++] = HeIIName;
+    DataLabel[BaryonField++] = HeIIIName;
+  }
+
+  // if using external chemistry/cooling, set rate labels
+  DataLabel[BaryonField++] = kphHIName;
+  DataLabel[BaryonField++] = gammaName;
+  if (!RadiativeTransferHydrogenOnly) {
+    DataLabel[BaryonField++] = kphHeIName;
+    DataLabel[BaryonField++] = kphHeIIName;
+  }
+  if (MultiSpecies > 1)
+    DataLabel[BaryonField++] = kdissH2IName;
+
+  // if using a star maker recipe, set a field for the emissivity
+  if (StarMakerEmissivityField) 
+    DataLabel[BaryonField++] = EtaName;
+  
+
+  for (int i=0; i<BaryonField; i++) 
+    DataUnits[i] = NULL;
+
+  return SUCCESS;
+
+#else
+
+  fprintf(stderr,"Error: TRANSFER must be enabled for this test!\n");
+  return FAIL;
+ 
+#endif
+
+}
+

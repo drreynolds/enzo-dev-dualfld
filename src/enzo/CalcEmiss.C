@@ -52,6 +52,10 @@ int CalcEmiss(int *nx, int *ny, int *nz,
   float mform, tfactor, uv_energy, 
         minitial, xv1, xv2, dratio;
 
+  /* Multiplying UV_parameter by 4pi to be consistent with the energy equation in FLD solver*/
+
+  float uv_param = 4*pi*UV_parameter;
+
   /* disabling clear of Emissivity field until a way to do it in AMR is found 
      in EvolveHierarchy and EvolveLevel.  Instead put the clear here manually
    */

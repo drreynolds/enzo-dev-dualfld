@@ -930,7 +930,12 @@ EXTERN int ImplicitProblem;
 /* Star-Maker emissivity field generator and uv_param used in calculating Geoffrey's Emissivity0 baryon field */
 
 EXTERN int StarMakerEmissivityField;
-EXTERN float uv_param;
+/* EXTERN float uv_param; */
+
+/* Emissivity UV parameter, Razoumov and Norman 2002 */
+
+EXTERN float UV_parameter;
+EXTERN float Xr_parameter;
 
 /* Shearing Boundary Conditions */
 

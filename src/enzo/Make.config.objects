@@ -138,6 +138,26 @@ OBJS_CONFIG_LIB = \
 	DetermineParallelism.o \
 	DetermineSubgridSizeExtrema.o \
         DoubleMachInitialize.o \
+        DualCosmoIonizationInitialize.o \
+        DualFLD_ComputeOpacity.o \
+        DualFLD_ComputeRadiationIntegrals.o \
+        DualFLD_ComputeTimeStep.o \
+        DualFLD_constructor.o \
+        DualFLD_destructor.o \
+        DualFLD_EnforceBoundary.o \
+        DualFLD_Evolve.o \
+        DualFLD_FillRates.o \
+        DualFLD_Initialize.o \
+        DualFLD_Limiter.o \
+        DualFLD_RadiationSource.o \
+        DualFLD_ReadParameters.o \
+        DualFLD_SetupBoundary.o \
+        DualFLD_SetupSystem.o \
+        DualFLD_WriteParameters.o \
+        DualRadConstTestInitialize.o \
+        DualRHIonizationClumpInitialize.o \
+        DualRHIonizationSteepInitialize.o \
+        DualRHIonizationTestInitialize.o \
         E_ColumnFormat.o \
         ealFloat.o \
         ealInt.o \
@@ -410,6 +430,11 @@ OBJS_CONFIG_LIB = \
 	Grid_destructor.o \
 	Grid_DetachForcingFromBaryonFields.o \
 	Grid_DoubleMachInitializeGrid.o \
+        Grid_DualCosmoIonizationInitializeGrid.o \
+        Grid_DualRadConstTestInitializeGrid.o \
+        Grid_DualRHIonizationClumpInitializeGrid.o \
+        Grid_DualRHIonizationSteepInitializeGrid.o \
+        Grid_DualRHIonizationTestInitializeGrid.o \
 	Grid_FastSiblingLocatorAddGrid.o \
 	Grid_FastSiblingLocatorFindSiblings.o \
 	Grid_FindAllStarParticles.o \
@@ -699,6 +724,8 @@ OBJS_CONFIG_LIB = \
         pop3_color_maker_c.o \
         pop3_maker.o \
         pop3_properties.o \
+        PopIISED.o \
+        PowerLawSED.o \
         power_of_2.o \
         prefort2.o \
 	PrepareDensityField.o \

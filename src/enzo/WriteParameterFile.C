@@ -283,8 +283,12 @@ int WriteParameterFile(FILE *fptr, TopGridData &MetaData, char *name = NULL)
   fprintf(fptr, "ImplicitProblem = %"ISYM"\n", ImplicitProblem);
 #ifdef EMISSIVITY
   fprintf(fptr, "StarMakerEmissivityField = %"ISYM"\n", StarMakerEmissivityField);
-  fprintf(fptr, "uv_param = %"GSYM"\n", uv_param);
+  // fprintf(fptr, "uv_param = %"GSYM"\n", uv_param);
 #endif
+
+  fprintf(fptr, "UV_parameter           = %"FSYM"\n", UV_parameter);
+  fprintf(fptr, "Xr_parameter           = %e\n", Xr_parameter);
+
   fprintf(fptr, "RadiativeTransferFLD   = %"ISYM"\n", RadiativeTransferFLD);
 
   fprintf(fptr, "ParticleBoundaryType   = %"ISYM"\n",MetaData.ParticleBoundaryType);
