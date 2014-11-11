@@ -922,8 +922,7 @@ EXTERN int RadiativeTransferFLD;
       1 => use the gFLDProblem module for single-group coupled FLD
       2 => use the FSProb module for free-streaming FLD radiation 
       3 => use the gFLDSplit module for single-group split FLD
-      4 => use the MFProb, multi-frequency fully implicit module
-      5 => use the MFSplit, multi-frequency split implicit module
+      4 => use the DualFLD module for split UV + Xray FLD evolution
 */
 EXTERN int ImplicitProblem;
 
