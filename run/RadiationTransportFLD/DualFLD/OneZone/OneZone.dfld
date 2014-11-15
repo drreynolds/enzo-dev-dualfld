@@ -1,0 +1,48 @@
+#
+# DualFLD Parameter File:
+#   Homogeneous test for accurate X-ray heating/ionization
+#
+#  Daniel R. Reynolds, reynolds@smu.edu
+#
+#############################
+#
+# Specify radiation field(s) to use in solver
+#
+DualFLDUseUV         = 0              // disable UV radiation
+DualFLDUseXray       = 1              // enable Xray radiation
+DualFLDXraySpectrum  = -1             // monochromatic spectrum
+DualFLDXrayFrequency = 1000           // X-ray radiation frequency [eV]
+DualFLDXrayStatic    = 1              // static Xray field (no FLD solve needed)
+#
+# Specify radiation source(s) to use in solver
+#
+DualFLDNumSourcesXray = 0             // no external sources
+#
+# Problem-specific initialization parameters
+# 
+DualFLD_Velocity            = 0.0 0.0 0.0       // initial velocity [cm/s]
+DualFLD_Density             = 2.9475329209e-26  // initial density [g]
+DualFLD_Temperature         = 100.0             // initial temperature [K]
+DualFLD_UVRadiationEnergy   = 1.e-60            // initial UV radiation energy [erg/cm^3]
+DualFLD_XrayRadiationEnergy = 3.335641e-13      // Xray energy [corresp to flux F=1e-2]
+#DualFLD_XrayRadiationEnergy = 3.335641e-14      // Xray energy [corresp to flux F=1e-3]
+#DualFLD_XrayRadiationEnergy = 3.335641e-15      // Xray energy [corresp to flux F=1e-4]
+#DualFLD_XrayRadiationEnergy = 3.335641e-16      // Xray energy [corresp to flux F=1e-5]
+#DualFLD_XrayRadiationEnergy = 3.335641e-17      // Xray energy [corresp to flux F=1e-6]
+#DualFLD_XrayRadiationEnergy = 3.335641e-18      // Xray energy [corresp to flux F=1e-7]
+DualFLD_InitialFractionHII  = 1.e-5             // initial HII fraction
+#
+DualFLDUVBoundaryX0Faces = 0 0        // periodic
+DualFLDUVBoundaryX1Faces = 0 0
+DualFLDUVBoundaryX2Faces = 0 0
+#
+# General module and solver parameters
+# 
+DualFLDMaxDt             = 1.0e-3         // largest normalized time step
+DualFLDMinDt             = 1.0e-8         // smallest normalized time step
+DualFLDInitDt            = 1.0e-8         // first time step
+DualFLDDtGrowth          = 5.0            // maximum dt growth factor/step
+DualFLDXrayTimeAccuracy  = 0.0001         // 0.01% desired change/step
+DualFLDAutoScaling       = 0              // disable automatic scaling
+
+#############################

@@ -1,0 +1,48 @@
+#
+# DualFLD Parameter File:
+#   Shapiro & Giroux, isothermal, static, cosmological ionization of a
+#   homogeneous density field
+#
+#  Daniel R. Reynolds, reynolds@smu.edu
+#
+#############################
+#
+# Specify radiation field(s) to use in solver
+#
+DualFLDUseUV       = 1                    // enable UV radiation
+DualFLDUseXray     = 0                    // disable Xray radiation
+DualFLDUVSpectrum  = -1                   // monochromatic spectrum
+DualFLDUVFrequency = 13.6                 // UV radiation frequency [eV]
+#
+# Specify radiation source(s) to use in solver
+#
+DualFLDNumSourcesUV = 1                   // one ionization source
+DualFLDSourceLocationUV[0] = 0.0 0.0 0.0  // emissivity source location
+DualFLDSourceEnergyUV[0] = 5e48           // emission strength [photons/s]
+#
+# Problem-specific initialization parameters
+# 
+DualFLD_Velocity          = 0.0 0.0 0.0   // initial velocity [cm/s]
+DualFLD_Temperature       = 1.0e4         // initial temperature [K]
+DualFLD_UVRadiationEnergy = 1.0e-35       // initial UV radiation energy [erg/cm^3]
+DualFLD_OmegaBaryonNow    = 0.1           // baryonic fraction of total Omega
+DualFLDIsothermal         = 1             // isothermal
+#
+# Radiation boundary conditions
+# 
+DualFLDUVBoundaryX0Faces = 2 2            // neumann
+DualFLDUVBoundaryX1Faces = 2 2
+DualFLDUVBoundaryX2Faces = 2 2
+#
+# General module and solver parameters
+# 
+DualFLDMaxDt             = 1.0e-2         // largest normalized time step
+DualFLDMinDt             = 1.0e-6         // smallest normalized time step
+DualFLDInitDt            = 1.0e-6         // first time step
+DualFLDUVTimeAccuracy    = 0.0005         // 0.05% desired change/step
+DualFLDUVScaling         = 0.01
+DualFLDAutoScaling       = 0              // disable automatic scaling
+DualFLDMGPreRelaxUV      = 3              // MG pre-relaxation sweeps
+DualFLDMGPostRelaxUV     = 3              // MG post-relaxation sweeps
+
+#############################

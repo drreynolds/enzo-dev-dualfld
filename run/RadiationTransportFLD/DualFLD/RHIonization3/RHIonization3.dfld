@@ -1,0 +1,49 @@
+#
+# DualFLD Parameter File:
+#   Iliev et al. static photoevaporation of a clump test
+#
+#  Daniel R. Reynolds, reynolds@smu.edu
+#
+#############################
+#
+# Specify radiation field(s) to use in solver
+#
+DualFLDUseUV      = 1                    // enable UV radiation
+DualFLDUseXray    = 0                    // disable Xray radiation
+DualFLDUVSpectrum = 1                    // 1e5 blackbody spectrum
+#
+# Specify radiation source(s) to use in solver
+#
+DualFLDNumSourcesUV = 0                  // wall source built-in for ProblemType
+#
+# Problem-specific initialization parameters
+# 
+DualFLD_Velocity             = 0.0 0.0 0.0
+DualFLD_NumDensityIn         = 4.0e-2
+DualFLD_NumDensityOut        = 2.0e-4
+DualFLD_TemperatureIn        = 40.0
+DualFLD_TemperatureOut       = 8000.0
+DualFLD_UVRadiationEnergy    = 1.0e-35
+DualFLD_InitialFractionHII   = 0.0
+DualFLD_InitialFractionHeII  = 0.0
+DualFLD_InitialFractionHeIII = 0.0
+DualFLD_ClumpCenter          = 5.0 3.3 3.3
+DualFLD_ClumpRadius          = 0.8
+#
+# Radiation boundary conditions
+# 
+DualFLDUVBoundaryX0Faces = 2 1           // neumann/dirichlet
+DualFLDUVBoundaryX1Faces = 0 0           // periodic
+DualFLDUVBoundaryX2Faces = 0 0
+#
+# General module and solver parameters
+# 
+DualFLDMaxDt             = 1.0e-2         // largest normalized time step
+DualFLDMinDt             = 1.0e-6         // smallest normalized time step
+DualFLDInitDt            = 1.0e-6         // first time step
+DualFLDUVTimeAccuracy    = 0.01           // 1% desired change/step
+DualFLDAutoScaling       = 0              // disable automatic scaling
+DualFLDMGPreRelaxUV      = 2              // MG pre-relaxation sweeps
+DualFLDMGPostRelaxUV     = 2              // MG post-relaxation sweeps
+
+#############################

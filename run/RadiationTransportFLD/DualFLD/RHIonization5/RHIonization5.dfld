@@ -1,0 +1,44 @@
+#
+# DualFLD Parameter File:
+#   Iliev et al. dynamic ionization of a homogeneous density field
+#
+#  Daniel R. Reynolds, reynolds@smu.edu
+#
+#############################
+#
+# Specify radiation field(s) to use in solver
+#
+DualFLDUseUV      = 1                     // enable UV radiation
+DualFLDUseXray    = 0                     // disable Xray radiation
+DualFLDUVSpectrum = 1                     // 1e5 blackbody spectrum
+#
+# Specify radiation source(s) to use in solver
+#
+DualFLDNumSourcesUV = 1                   // one ionization source
+DualFLDSourceLocationUV[0] = 0.0 0.0 0.0  // emissivitiy source location
+DualFLDSourceEnergyUV[0] = 5e48           // emission strength [photons/s]
+#
+# Problem-specific initialization parameters
+# 
+DualFLD_Velocity          = 0.0 0.0 0.0   // initial velocity [cm/s]
+DualFLD_Density           = 1.67262171e-27  // density (desired nH=1e-3)
+DualFLD_Temperature       = 1.0e2         // temperature (K)
+DualFLD_UVRadiationEnergy = 1.0e-35       // UV radiation energy (erg/cm^3)
+#
+# Radiation boundary conditions
+# 
+DualFLDUVBoundaryX0Faces = 2 2            // neumann
+DualFLDUVBoundaryX1Faces = 2 2
+DualFLDUVBoundaryX2Faces = 2 2
+#
+# General module and solver parameters
+# 
+DualFLDMaxDt             = 1.0e-2         // largest normalized time step
+DualFLDMinDt             = 1.0e-8         // smallest normalized time step
+DualFLDInitDt            = 1.0e-8         // first time step
+DualFLDUVTimeAccuracy    = 0.001          // 0.1% desired change/step
+DualFLDAutoScaling       = 0              // disable automatic scaling
+DualFLDMGPreRelaxUV      = 3              // MG pre-relaxation sweeps
+DualFLDMGPostRelaxUV     = 3              // MG post-relaxation sweeps
+
+#############################
