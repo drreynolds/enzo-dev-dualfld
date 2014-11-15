@@ -774,7 +774,7 @@ int gFLDSplit::RadStep(HierarchyEntry *ThisGrid, int eta_set)
     ENZO_FAIL("gFLDSplit_RadStep: Error in SetupSystem routine");
   
   // skip solve if ||rhs|| < sol_tolerance  (i.e. old solution is fine)
-  if (rhsnorm < sol_tolerance) {
+  if (rhsnorm < 0.01*sol_tolerance) {
     if (debug) {
       printf(" ----------------------------------------------------------------------\n");
       printf("   no solve required: |rhs| = %.1e  <  tol = %.1e\n", rhsnorm, sol_tolerance);
