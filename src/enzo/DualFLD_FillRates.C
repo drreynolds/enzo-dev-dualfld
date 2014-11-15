@@ -36,18 +36,6 @@ int DualFLD::FillRates(HierarchyEntry *ThisGrid) {
 //   if (debug)
 //     printf("Entering DualFLD::FillRates routine\n");
 
-  // set dimension information
-  int ghZl = (rank > 2) ? NumberOfGhostZones : 0;
-  int ghYl = (rank > 1) ? NumberOfGhostZones : 0;
-  int ghXl = NumberOfGhostZones;
-  int n3[] = {1, 1, 1};
-  for (int dim=0; dim<rank; dim++)
-    n3[dim] = ThisGrid->GridData->GetGridEndIndex(dim)
-            - ThisGrid->GridData->GetGridStartIndex(dim) + 1;
-  int x0len = n3[0] + 2*ghXl;
-  int x1len = n3[1] + 2*ghYl;
-  int x2len = n3[2] + 2*ghZl;
-  
   // access relevant fields
   float *rho, *HI, *HeI, *HeII, *phHI, *phHeI, *phHeII, *photogamma, *dissH2I, *UV, *Xr;
   rho = HI = HeI = HeII = phHI = phHeI = phHeII = photogamma = dissH2I = NULL;
@@ -108,8 +96,8 @@ int DualFLD::FillRates(HierarchyEntry *ThisGrid) {
   //float UVUn     = 2.0*UVUnits*UVUnits0/(UVUnits+UVUnits0);   // harmonic mean
   //float XrUn     = 2.0*XrUnits*XrUnits0/(XrUnits+XrUnits0);
 
-  // photogamma array temporarily holds electron fraction for secondary ionization rates
-  float *xe = photogamma;
+  // temporary vector 'sol' is not currently used, store electron fraction there
+  float *xe = sol->GetData(0);
 
   // compute the size of the fields
   int i, dim, size=1;
@@ -126,56 +114,63 @@ int DualFLD::FillRates(HierarchyEntry *ThisGrid) {
 		  / (rho[i]*(HFrac+1.0)*0.5), 1e-4);
 
   // fill HI photo-ionization rate
-  float pHIconstUV = clight*TimeUnits*UVUn*RadIntUV[2]/hplanck/RadIntUV[0];
-  float pHIconstXr = clight*TimeUnits*XrUn*RadIntXr[1]/RadIntXr[0]/(hnu0_HI*ev2erg);
   for (i=0; i<size; i++)  phHI[i] = 0.0;
-  if (UseXray)
+  if (UseXray) {
+    float pHIconstXr = clight*TimeUnits*XrUn*RadIntXr[1]/RadIntXr[0]/(hnu0_HI*ev2erg);
     for (i=0; i<size; i++)
       phHI[i] += Xr[i]*pHIconstXr*0.3908*pow((1.0-pow(xe[i], 0.4092)), 1.7592);
-  if (UseUV)
+  }
+  if (UseUV) {
+    float pHIconstUV = clight*TimeUnits*UVUn*RadIntUV[2]/hplanck/RadIntUV[0];
     for (i=0; i<size; i++)  
       phHI[i] += UV[i]*pHIconstUV;
+  }
 
   // fill HeI and HeII photo-ionization rates
-  float pHeIconstUV  = clight*TimeUnits*UVUn*RadIntUV[4]/hplanck/RadIntUV[0];
-  float pHeIIconstUV = clight*TimeUnits*UVUn*RadIntUV[6]/hplanck/RadIntUV[0];
-  float pHeIconstXr  = clight*TimeUnits*XrUn*RadIntXr[3]/RadIntXr[0]/(hnu0_HeI*ev2erg);
-  if (RadiativeTransferHydrogenOnly == FALSE) {
+  if (!RadiativeTransferHydrogenOnly) {
     for (i=0; i<size; i++)  phHeI[i] = 0.0;
     for (i=0; i<size; i++)  phHeII[i] = 0.0;
-    if (UseXray)
+    if (UseXray) {
+      float pHeIconstXr  = clight*TimeUnits*XrUn*RadIntXr[3]/RadIntXr[0]/(hnu0_HeI*ev2erg);
       for (i=0; i<size; i++)  
 	phHeI[i] += Xr[i]*pHeIconstXr*0.0554*pow((1.0-pow(xe[i], 0.4614)), 1.6660);
+    }
     if (UseUV) {
+      float pHeIconstUV  = clight*TimeUnits*UVUn*RadIntUV[4]/hplanck/RadIntUV[0];
+      float pHeIIconstUV = clight*TimeUnits*UVUn*RadIntUV[6]/hplanck/RadIntUV[0];
       for (i=0; i<size; i++)  phHeI[i] += UV[i]*pHeIconstUV;
       for (i=0; i<size; i++)  phHeII[i] += UV[i]*pHeIIconstUV;
     }
   }
 
   // fill photo-heating rate
-  float phScaleUV    = clight*TimeUnits*UVUn/RadIntUV[0]/VelUnits/VelUnits/mh/rtunits;
-  float GHIconstUV   = phScaleUV*(RadIntUV[1] - hnu0_HI*ev2erg/hplanck*RadIntUV[2]);
-  float GHeIconstUV  = phScaleUV*(RadIntUV[3] - hnu0_HeI*ev2erg/hplanck*RadIntUV[4]);
-  float GHeIIconstUV = phScaleUV*(RadIntUV[5] - hnu0_HeII*ev2erg/hplanck*RadIntUV[6]);
-  float phScaleXr    = clight*TimeUnits*XrUn/RadIntXr[0]/VelUnits/VelUnits/mh/rtunits*0.9971;
-  float GHIconstXr   = phScaleXr*(RadIntXr[1] - hnu0_HI*ev2erg/hplanck*RadIntXr[2]);
-  float GHeIconstXr  = phScaleXr*(RadIntXr[3] - hnu0_HeI*ev2erg/hplanck*RadIntXr[4]);
-  float GHeIIconstXr = phScaleXr*(RadIntXr[5] - hnu0_HeII*ev2erg/hplanck*RadIntXr[6]);
   for (i=0; i<size; i++)  photogamma[i] = 0.0;
-  if (RadiativeTransferHydrogenOnly) {
-    if (UseXray)
+  if (UseXray) {
+    float phScaleXr    = clight*TimeUnits*XrUn/RadIntXr[0]/VelUnits/VelUnits/mh/rtunits*0.9971;
+    float GHIconstXr   = phScaleXr*(RadIntXr[1] - hnu0_HI*ev2erg/hplanck*RadIntXr[2]);
+    float GHeIconstXr  = phScaleXr*(RadIntXr[3] - hnu0_HeI*ev2erg/hplanck*RadIntXr[4]);
+    float GHeIIconstXr = phScaleXr*(RadIntXr[5] - hnu0_HeII*ev2erg/hplanck*RadIntXr[6]);
+    if (RadiativeTransferHydrogenOnly) {
       for (i=0; i<size; i++)
 	photogamma[i] += Xr[i]*GHIconstXr*(1.0 - pow(1.0 - pow(xe[i], 0.2663), 1.3163));
-    if (UseUV) 
-      for (i=0; i<size; i++)  photogamma[i] += UV[i]*GHIconstUV;
-  } else {
-    if (UseXray)
-      for (i=0; i<size; i++)  
+    } else {
+      for (i=0; i<size; i++) {
 	photogamma[i] += Xr[i]/HI[i]*(GHIconstXr*HI[i] + GHeIconstXr*HeI[i] + GHeIIconstXr*HeII[i])
 	  *(1.0 - pow(1.0 - pow(xe[i], 0.2663), 1.3163));
-    if (UseUV)
+      }
+    }
+  }
+  if (UseUV) {
+    float phScaleUV    = clight*TimeUnits*UVUn/RadIntUV[0]/VelUnits/VelUnits/mh/rtunits;
+    float GHIconstUV   = phScaleUV*(RadIntUV[1] - hnu0_HI*ev2erg/hplanck*RadIntUV[2]);
+    float GHeIconstUV  = phScaleUV*(RadIntUV[3] - hnu0_HeI*ev2erg/hplanck*RadIntUV[4]);
+    float GHeIIconstUV = phScaleUV*(RadIntUV[5] - hnu0_HeII*ev2erg/hplanck*RadIntUV[6]);
+    if (RadiativeTransferHydrogenOnly) {
+      for (i=0; i<size; i++)  photogamma[i] += UV[i]*GHIconstUV;
+    } else {
       for (i=0; i<size; i++)  
 	photogamma[i] += UV[i]/HI[i]*(GHIconstUV*HI[i] + GHeIconstUV*HeI[i] + GHeIIconstUV*HeII[i]);
+    }
   }
 
   // fill H2 dissociation rate (zero for grey FLD problems)

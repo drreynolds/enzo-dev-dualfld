@@ -78,18 +78,15 @@ int grid::DualCosmoIonizationInitializeGrid(float VxConstant,
   FieldType[DeNum = NumberOfBaryonFields++]    = ElectronDensity;
   FieldType[HINum = NumberOfBaryonFields++]    = HIDensity;
   FieldType[HIINum = NumberOfBaryonFields++]   = HIIDensity;
-  if (!RadiativeTransferHydrogenOnly) {
-    FieldType[HeINum   = NumberOfBaryonFields++] = HeIDensity;
-    FieldType[HeIINum  = NumberOfBaryonFields++] = HeIIDensity;    
-    FieldType[HeIIINum = NumberOfBaryonFields++] = HeIIIDensity;
-  }
+  FieldType[HeINum   = NumberOfBaryonFields++] = HeIDensity;
+  FieldType[HeIINum  = NumberOfBaryonFields++] = HeIIDensity;    
+  FieldType[HeIIINum = NumberOfBaryonFields++] = HeIIIDensity;
+
   // set external chemistry/cooling rate fields
   FieldType[kphHINum = NumberOfBaryonFields++] = kphHI;
   FieldType[gammaNum = NumberOfBaryonFields++] = PhotoGamma;
-  if (!RadiativeTransferHydrogenOnly) {
-    FieldType[kphHeINum  = NumberOfBaryonFields++] = kphHeI;
-    FieldType[kphHeIINum = NumberOfBaryonFields++] = kphHeII;
-  }
+  FieldType[kphHeINum  = NumberOfBaryonFields++] = kphHeI;
+  FieldType[kphHeIINum = NumberOfBaryonFields++] = kphHeII;
   if (MultiSpecies > 1)
     FieldType[kdissH2INum = NumberOfBaryonFields++] = kdissH2I;
 
@@ -160,11 +157,9 @@ int grid::DualCosmoIonizationInitializeGrid(float VxConstant,
       BaryonField[DeNum][i]    = DeConstant/DensityUnits;
       BaryonField[HINum][i]    = HIConstant/DensityUnits;
       BaryonField[HIINum][i]   = HIIConstant/DensityUnits;
-      if (!RadiativeTransferHydrogenOnly) {
-	BaryonField[HeINum][i]   = HeIConstant/DensityUnits;
-	BaryonField[HeIINum][i]  = HeIIConstant/DensityUnits;
-	BaryonField[HeIIINum][i] = HeIIIConstant/DensityUnits;
-      }
+      BaryonField[HeINum][i]   = HeIConstant/DensityUnits;
+      BaryonField[HeIINum][i]  = HeIIConstant/DensityUnits;
+      BaryonField[HeIIINum][i] = HeIIIConstant/DensityUnits;
     }
     if (DualEnergyFormalism)
       for (i=0; i<size; i++)
@@ -173,10 +168,8 @@ int grid::DualCosmoIonizationInitializeGrid(float VxConstant,
     // set external chemistry/cooling rate fields
     for (i=0; i<size; i++)  BaryonField[kphHINum][i] = 0.0;
     for (i=0; i<size; i++)  BaryonField[gammaNum][i] = 0.0;
-    if (!RadiativeTransferHydrogenOnly) {
-      for (i=0; i<size; i++)  BaryonField[kphHeINum][i]  = 0.0;
-      for (i=0; i<size; i++)  BaryonField[kphHeIINum][i] = 0.0;
-    }
+    for (i=0; i<size; i++)  BaryonField[kphHeINum][i]  = 0.0;
+    for (i=0; i<size; i++)  BaryonField[kphHeIINum][i] = 0.0;
     if (MultiSpecies > 1)
       for (i=0; i<size; i++)  BaryonField[kdissH2INum][i] = 0.0;
 
@@ -197,11 +190,9 @@ int grid::DualCosmoIonizationInitializeGrid(float VxConstant,
       printf("      electrons = %g\n",DeConstant);
       printf("            nHI = %g\n",HIConstant);
       printf("           nHII = %g\n",HIIConstant);
-      if (!RadiativeTransferHydrogenOnly) {
-	printf("           nHeI = %g\n",HeIConstant);
-	printf("          nHeII = %g\n",HeIIConstant);
-	printf("         nHeIII = %g\n",HeIIIConstant);
-      }
+      printf("           nHeI = %g\n",HeIConstant);
+      printf("          nHeII = %g\n",HeIIConstant);
+      printf("         nHeIII = %g\n",HeIIIConstant);
       
       printf("Corresponding Enzo internal values:\n");
       printf("        density = %g\n",rhoConstant/DensityUnits);
@@ -218,11 +209,9 @@ int grid::DualCosmoIonizationInitializeGrid(float VxConstant,
       printf("      electrons = %g\n",DeConstant/DensityUnits);
       printf("            nHI = %g\n",HIConstant/DensityUnits);
       printf("           nHII = %g\n",HIIConstant/DensityUnits);
-      if (!RadiativeTransferHydrogenOnly) {
-	printf("           nHeI = %g\n",BaryonField[HeINum][1]);
-	printf("          nHeII = %g\n",BaryonField[HeIINum][1]);
-	printf("         nHeIII = %g\n",BaryonField[HeIIINum][1]);
-      }
+      printf("           nHeI = %g\n",BaryonField[HeINum][1]);
+      printf("          nHeII = %g\n",BaryonField[HeIINum][1]);
+      printf("         nHeIII = %g\n",BaryonField[HeIIINum][1]);
     }
 
   } // end if NewData == TRUE

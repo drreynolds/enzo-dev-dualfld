@@ -230,8 +230,26 @@ int RadiativeTransferInitialize(char *ParameterFile,
 
   }  // ENDIF RadiativeTransfer
   else if (RadiativeTransferFLD > 1) {  // do the same for the FLD solver
-    TypesToAdd[FieldsToAdd++] = RadiationFreq0;
-    if (RadiativeCooling) {
+
+    // grey FLD problem
+    if (ImplicitProblem < 4) {
+      TypesToAdd[FieldsToAdd++] = RadiationFreq0;
+      if (RadiativeCooling) {
+	TypesToAdd[FieldsToAdd++] = kphHI;
+	TypesToAdd[FieldsToAdd++] = PhotoGamma;
+	if (RadiativeTransferHydrogenOnly == FALSE) {
+	  TypesToAdd[FieldsToAdd++] = kphHeI;
+	  TypesToAdd[FieldsToAdd++] = kphHeII;
+	}
+	if (MultiSpecies > 1)
+	  TypesToAdd[FieldsToAdd++] = kdissH2I;
+      }
+    }
+
+    // dual FLD problem
+    if (ImplicitProblem == 4) {
+      //TypesToAdd[FieldsToAdd++] = RadiationFreq0;  // uses Freq0 and/or Freq1, so cannot 
+                                                     // 'catch' initialization error here
       TypesToAdd[FieldsToAdd++] = kphHI;
       TypesToAdd[FieldsToAdd++] = PhotoGamma;
       if (RadiativeTransferHydrogenOnly == FALSE) {

@@ -239,7 +239,9 @@ class DualFLD : public virtual ImplicitProblemABC {
   SED  *UV_SED;
 
   // private solver storage
-  EnzoVector *sol;     // solution vector
+  EnzoVector *sol;     // solution vector (allocates memory)
+  EnzoVector *U;       // old solution vector (empty)
+  EnzoVector *EtaVec;  // emissivity vector (empty)
 
   // private computation routines
   int ReadParameters(TopGridData &MetaData, HierarchyEntry *ThisGrid);

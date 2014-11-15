@@ -151,9 +151,9 @@ int DualFLD::Initialize(HierarchyEntry &TopGrid, TopGridData &MetaData) {
     }
   }
   if (debug){
-    printf("DualFLD::Initialize p%"ISYM": rank = %"ISYM"\n", MyProcessorNumber, rank);
-    printf("DualFLD::Initialize p%"ISYM": layout = (%"ISYM",%"ISYM",%"ISYM")\n",MyProcessorNumber,layout[0],layout[1],layout[2]);
-    printf("DualFLD::Initialize p%"ISYM": location = (%"ISYM",%"ISYM",%"ISYM")\n",MyProcessorNumber,location[0],location[1],location[2]);
+    printf("DualFLD::Initialize: rank = %"ISYM"\n", rank);
+    printf("DualFLD::Initialize: layout = (%"ISYM",%"ISYM",%"ISYM")\n", 
+	   layout[0], layout[1], layout[2]);
   }
 
   // compute global dimension information
@@ -264,7 +264,15 @@ int DualFLD::Initialize(HierarchyEntry &TopGrid, TopGridData &MetaData) {
   sol = new EnzoVector(LocDims[0], LocDims[1], LocDims[2], GhDims[0][0], 
 		       GhDims[0][1], GhDims[1][0], GhDims[1][1], GhDims[2][0], 
 		       GhDims[2][1], nrad, NBors[0][0], NBors[0][1], NBors[1][0], 
-		       NBors[1][1], NBors[2][0], NBors[2][1], 1);
+		       NBors[1][1], NBors[2][0], NBors[2][1]);        // allocates memory
+  U = new EnzoVector(LocDims[0], LocDims[1], LocDims[2], GhDims[0][0], 
+		     GhDims[0][1], GhDims[1][0], GhDims[1][1], GhDims[2][0], 
+		     GhDims[2][1], nrad, NBors[0][0], NBors[0][1], NBors[1][0], 
+		     NBors[1][1], NBors[2][0], NBors[2][1], 1);       // empty
+  EtaVec = new EnzoVector(LocDims[0], LocDims[1], LocDims[2], GhDims[0][0], 
+			  GhDims[0][1], GhDims[1][0], GhDims[1][1], GhDims[2][0], 
+			  GhDims[2][1], 1, NBors[0][0], NBors[0][1], NBors[1][0], 
+			  NBors[1][1], NBors[2][0], NBors[2][1], 1);  // empty
 
   // ensure that CoolData object has been set up
   if (CoolData.ceHI == NULL) 
@@ -458,12 +466,9 @@ int DualFLD::Initialize(HierarchyEntry &TopGrid, TopGridData &MetaData) {
   // (default to homogeneous Dirichlet)
   switch (ProblemType) {
     
-  // Ionization tests 0,1,7,8: set zero-gradient (homogeneous Neumann)
+  // Ionization tests 1: set zero-gradient (homogeneous Neumann)
   // boundary conditions on all faces.
-  case 410:
-  case 411:
-  case 417:
-  case 418:
+  case 431:
     // first call local problem initializer (to allocate/setup local data)
     if (DualRHIonizationTestInitialize(fptr, fptr, TopGrid, MetaData, 1) == FAIL) 
       ENZO_FAIL("DualFLD::Initialize Error in RHIonizationTestInitialize.");
@@ -486,7 +491,7 @@ int DualFLD::Initialize(HierarchyEntry &TopGrid, TopGridData &MetaData) {
     
   // Ionization test 2: set zero-gradient (homogeneous Neumann)
   // boundary conditions on all non-periodic faces.
-  case 412:
+  case 432:
     // first call local problem initializer (to allocate/setup local data)
     if (DualRHIonizationClumpInitialize(fptr, fptr, TopGrid, MetaData, 1) == FAIL) 
       ENZO_FAIL("DualFLD::Initialize Error in RHIonizationClumpInitialize.");
@@ -507,9 +512,9 @@ int DualFLD::Initialize(HierarchyEntry &TopGrid, TopGridData &MetaData) {
     break;
     
     
-  // Ionization test 13: set zero-gradient (homogeneous Neumann)
+  // Ionization test 3: set zero-gradient (homogeneous Neumann)
   // boundary conditions on all faces.
-  case 413:
+  case 433:
     // first call local problem initializer (to allocate/setup local data)
     if (DualRHIonizationSteepInitialize(fptr, fptr, TopGrid, MetaData, 1) == FAIL) 
       ENZO_FAIL("DualFLD::Initialize Error in RHIonizationSteepInitialize.");
@@ -531,18 +536,35 @@ int DualFLD::Initialize(HierarchyEntry &TopGrid, TopGridData &MetaData) {
     
     
     
-  // Ionization test 14: periodic boundary conditions on all faces (store no data).
-  case 414:
+  // Ionization test 4: set homogeneous Neumann/Dirichlet boundary 
+  // conditions on all non-periodic faces
+  case 434:
     // first call local problem initializer (to allocate/setup local data)
     if (DualCosmoIonizationInitialize(fptr, fptr, TopGrid, MetaData, 1) == FAIL) 
       ENZO_FAIL("DualFLD::Initialize Error in CosmoIonizationInitialize.");
-    
+
+    // set BC on all non-periodic faces to zero-valued (Dirichlet or Neumann)
+    for (dim=0; dim<MetaData.TopGridRank; dim++) {
+      for (face=0; face<2; face++) {
+	if (XrBdryType[dim][face] != 0)
+	  if (this->SetupBoundary(dim,face,0,1,&ZERO) == FAIL) {
+	    ENZO_VFAIL("DualFLD::Initialize Error setting dim %"ISYM
+		       ", face %"ISYM" Xray radiation BCs\n", dim, face)
+	  }
+	if (UVBdryType[dim][face] != 0)
+	  if (this->SetupBoundary(dim,face,1,1,&ZERO) == FAIL) {
+	    ENZO_VFAIL("DualFLD::Initialize Error setting dim %"ISYM
+		       ", face %"ISYM" UV radiation BCs\n", dim, face)
+	  }
+      }
+    }
+   
     break;
     
 
 
   // Homogeneous test initializer
-  case 416:
+  case 430:
     // first call local problem initializer (to allocate/setup local data)
     if (DualRadConstTestInitialize(fptr, fptr, TopGrid, MetaData, 1) == FAIL) 
       ENZO_FAIL("DualFLD::Initialize Error in DualRadHydroConstTestInitialize.");

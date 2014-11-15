@@ -33,7 +33,6 @@
 #ifdef TRANSFER
  
 #include "DualFLD.h"
-#include "EnzoVector.h"
 #include "CosmologyParameters.h"
 #include "phys_constants.h"
 
@@ -101,30 +100,23 @@ int DualFLD::Evolve(HierarchyEntry *ThisGrid, float dthydro)
   int i, dim, size=1;
   for (dim=0; dim<rank; dim++)  size *= ArrDims[dim];
 
-  // create EnzoVector structures around existing radiation fields
+  // point U EnzoVector fields at existing radiation fields
   // (for ghost zone communication)
   int nrad=0;
-  if (UseXray) nrad++;
-  if (UseUV)   nrad++;
-  EnzoVector U(LocDims[0], LocDims[1], LocDims[2], GhDims[0][0], GhDims[0][1], 
-	       GhDims[1][0], GhDims[1][1], GhDims[2][0], GhDims[2][1], nrad, 
-	       NBors[0][0], NBors[0][1], NBors[1][0], NBors[1][1], NBors[2][0], 
-	       NBors[2][1], 1);
-  nrad=0;
-  if (UseXray)  U.SetData(nrad++, XrRadiation);
-  if (UseUV)    U.SetData(nrad++, UVRadiation);
+  if (UseXray)  U->SetData(nrad++, XrRadiation);
+  if (UseUV)    U->SetData(nrad++, UVRadiation);
 
   // rescale radiation fields to non-dimensionalize within solver
   nrad=0;
-  if (UseXray)  U.scale_component(nrad++, 1.0/XrScale);
-  if (UseUV)    U.scale_component(nrad++, 1.0/UVScale);
+  if (UseXray)  U->scale_component(nrad++, 1.0/XrScale);
+  if (UseUV)    U->scale_component(nrad++, 1.0/UVScale);
 
   // enforce boundary conditions on current radiation fields
   if (EnforceBoundary(ThisGrid) != SUCCESS)
     ENZO_FAIL("DualFLD::Evolve: EnforceBoundary failure!!");
   
   // copy current radiation fields into solution vector
-  sol->copy(&U);
+  sol->copy(U);
   
   // begin communication of ghost zone information
   if (sol->exchange_start() != SUCCESS) 
@@ -133,6 +125,16 @@ int DualFLD::Evolve(HierarchyEntry *ThisGrid, float dthydro)
   // update internal Enzo units for current times
   float TempUnits, RadUnits;
   double MassUnits;
+  DenUnits = LenUnits = TempUnits = TimeUnits = VelUnits = MassUnits = 1.0;
+  if (GetUnits(&DenUnits, &LenUnits, &TempUnits, &TimeUnits, 
+	       &VelUnits, &MassUnits, told) != SUCCESS) 
+    ENZO_FAIL("DualFLD::Evolve: Error in GetUnits.");
+  if (RadiationGetUnits(&RadUnits, told) != SUCCESS) 
+    ENZO_FAIL("DualFLD::Evolve: Error in RadiationGetUnits.");
+  UVUnits0 = RadUnits*UVScale;
+  XrUnits0 = RadUnits*XrScale;
+  NiUnits0 = DenUnits/mh;
+
   DenUnits = LenUnits = TempUnits = TimeUnits = VelUnits = MassUnits = 1.0;
   if (GetUnits(&DenUnits, &LenUnits, &TempUnits, &TimeUnits, 
 	       &VelUnits, &MassUnits, tnew) != SUCCESS) 
@@ -148,12 +150,12 @@ int DualFLD::Evolve(HierarchyEntry *ThisGrid, float dthydro)
 #ifdef SOLUTION_DIAGNOSTICS
   nrad=0;
   if (UseXray) {
-    UTypVals[0] = U.rmsnorm_component(nrad);
-    UMaxVals[0] = U.infnorm_component(nrad++);
+    UTypVals[0] = U->rmsnorm_component(nrad);
+    UMaxVals[0] = U->infnorm_component(nrad++);
   }
   if (UseUV) {
-    UTypVals[1] = U.rmsnorm_component(nrad);
-    UMaxVals[1] = U.infnorm_component(nrad++);
+    UTypVals[1] = U->rmsnorm_component(nrad);
+    UMaxVals[1] = U->infnorm_component(nrad++);
   }
 
   if (debug) {
@@ -177,12 +179,12 @@ int DualFLD::Evolve(HierarchyEntry *ThisGrid, float dthydro)
 #ifndef SOLUTION_DIAGNOSTICS
     nrad=0;
     if (UseXray) {
-      UTypVals[0] = U.rmsnorm_component(nrad);
-      UMaxVals[0] = U.infnorm_component(nrad++);
+      UTypVals[0] = U->rmsnorm_component(nrad);
+      UMaxVals[0] = U->infnorm_component(nrad++);
     }
     if (UseUV) {
-      UTypVals[1] = U.rmsnorm_component(nrad);
-      UMaxVals[1] = U.infnorm_component(nrad++);
+      UTypVals[1] = U->rmsnorm_component(nrad);
+      UMaxVals[1] = U->infnorm_component(nrad++);
     }
 #endif
     if ((UMaxVals[0] - UTypVals[0]) > ScaleCorrTol*UMaxVals[0])
@@ -275,14 +277,14 @@ int DualFLD::Evolve(HierarchyEntry *ThisGrid, float dthydro)
     
     // update the radiation time step size for next time step
     //   (limit growth at each cycle)
-    float dt_est = this->ComputeTimeStep(&U, sol);
+    float dt_est = this->ComputeTimeStep(U, sol);
     dtrad = min(dt_est, dtgrowth*dtrad);
 
     // update Enzo radiation fields with new values
-    U.copy(sol);
+    U->copy(sol);
     
     // // have U communicate neighbor information
-    // if (U.exchange() != SUCCESS) 
+    // if (U->exchange() != SUCCESS) 
     //   ENZO_FAIL("DualFLD::Evolve: vector exchange error");
 
     // break out of time-stepping loop if we've reached the end
@@ -298,14 +300,49 @@ int DualFLD::Evolve(HierarchyEntry *ThisGrid, float dthydro)
   if (RadiativeCooling) 
     this->FillRates(ThisGrid);
 
+#ifdef SOLUTION_DIAGNOSTICS
+  // output the total photo-heating/photo-ionization rates
+  if (debug)  printf("  Photo-heating/photo-ionization rates:\n");
+
+  float *phHI = ThisGrid->GridData->AccessKPhHI();
+  EtaVec->SetData(0, phHI);
+  float phHI_norm = EtaVec->rmsnorm();
+  float phHI_max  = EtaVec->infnorm();
+  if (debug)  printf("          phHI norm = %.2e,  max = %.2e\n", 
+		     phHI_norm, phHI_max);
+
+  float *photogamma = ThisGrid->GridData->AccessPhotoGamma();
+  EtaVec->SetData(0, photogamma);
+  float photogamma_norm = EtaVec->rmsnorm();
+  float photogamma_max  = EtaVec->infnorm();
+  if (debug)  printf("    photogamma norm = %.2e,  max = %.2e\n", 
+		     photogamma_norm, photogamma_max);
+
+  if (!RadiativeTransferHydrogenOnly) {
+    float *phHeI = ThisGrid->GridData->AccessKPhHeI();
+    EtaVec->SetData(0, phHeI);
+    float phHeI_norm = EtaVec->rmsnorm();
+    float phHeI_max  = EtaVec->infnorm();
+    if (debug)  printf("         phHeI norm = %.2e,  max = %.2e\n", 
+		       phHeI_norm, phHeI_max);
+
+    float *phHeII = ThisGrid->GridData->AccessKPhHeII();
+    EtaVec->SetData(0, phHeII);
+    float phHeII_norm = EtaVec->rmsnorm();
+    float phHeII_max  = EtaVec->infnorm();
+    if (debug)  printf("        phHeII norm = %.2e,  max = %.2e\n", 
+		       phHeII_norm, phHeII_max);
+  }
+#endif
+
   // update the radiation time step size for next time step
   if (dtrad != huge_number)
     ThisGrid->GridData->SetMaxRadiationDt(dtrad);
 
   // scale back to Enzo units
   nrad=0;
-  if (UseXray)  U.scale_component(nrad++, XrScale);
-  if (UseUV)    U.scale_component(nrad++, UVScale);
+  if (UseXray)  U->scale_component(nrad++, XrScale);
+  if (UseUV)    U->scale_component(nrad++, UVScale);
 
   // update scaling factors to account for new values
   if (StartAutoScale && autoScale) {
@@ -412,13 +449,9 @@ int DualFLD::RadStep(HierarchyEntry *ThisGrid, int XrUv)
     ENZO_FAIL("DualFLD_RadStep: Error in RadiationSource routine\n");
 
   // output emissivity information, if applicable
-  EnzoVector EtaVec(LocDims[0], LocDims[1], LocDims[2], GhDims[0][0], GhDims[0][1], 
-		    GhDims[1][0], GhDims[1][1], GhDims[2][0], GhDims[2][1], 1, 
-		    NBors[0][0], NBors[0][1], NBors[1][0], NBors[1][1], NBors[2][0], 
-		    NBors[2][1], 1);
-  EtaVec.SetData(0, Eta);
-  float eta_norm = EtaVec.rmsnorm();
-  float eta_max  = EtaVec.infnorm();
+  EtaVec->SetData(0, Eta);
+  float eta_norm = EtaVec->rmsnorm();
+  float eta_max  = EtaVec->infnorm();
   if (debug)  printf("  emissivity norm = %g,  max = %g\n", eta_norm, eta_max);
 
   // turn on automatic scaling for next step if this step has nontrivial emissivity
@@ -463,12 +496,21 @@ int DualFLD::RadStep(HierarchyEntry *ThisGrid, int XrUv)
   if (this->SetupSystem(ThisGrid, XrUv, Enew, Opacity, Eta, rhsnorm) != SUCCESS) 
     ENZO_FAIL("DualFLD_RadStep: Error in SetupSystem routine");
 
+
+#define NO_PRINT_HYPRE_MATRICES
+#ifdef PRINT_HYPRE_MATRICES
+  // dump HYPRE matrices to disk
+  HYPRE_StructMatrixPrint("A-hypre",P,0);
+  HYPRE_StructVectorPrint("B-hypre",rhsvec,0);
+#endif  
+ 
+
+
   // skip solve if ||rhs|| < sol_tolerance  (i.e. old solution is fine)
-  if (rhsnorm < sol_tolerance) {
+  //  if (rhsnorm < sol_tolerance) {
+  if (rhsnorm < 0.01*sol_tolerance) {
     if (debug) {
-      printf(" ----------------------------------------------------------------------\n");
       printf("   no solve required: |rhs| = %.1e  <  tol = %.1e\n", rhsnorm, sol_tolerance);
-      printf(" ======================================================================\n\n");
     }
     // rescale dt, told, tnew, adot back to normalized values
     dt   /= TimeUnits;
@@ -611,8 +653,6 @@ int DualFLD::RadStep(HierarchyEntry *ThisGrid, int XrUv)
   }
   
   // solve the linear system
-  if (debug)
-    printf(" ----------------------------------------------------------------------\n");
   switch (Krylov_method) {
   case 0:   // PCG
     HYPRE_StructPCGSolve(solver, P, rhsvec, solvec);
@@ -625,6 +665,11 @@ int DualFLD::RadStep(HierarchyEntry *ThisGrid, int XrUv)
     break;
   }
   
+#ifdef PRINT_HYPRE_MATRICES
+  // dump HYPRE matrices to disk
+  HYPRE_StructVectorPrint("X-hypre",solvec,0);
+#endif  
+
   // extract solver & preconditioner statistics
   Eflt64 finalresid=1.0;  // HYPRE solver statistics
   Eint32 Sits=0, Pits=0;  // HYPRE solver statistics

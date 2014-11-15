@@ -31,18 +31,6 @@
 
 int DualFLD::EnforceBoundary(HierarchyEntry *ThisGrid) {
 
-  // set dimension information
-  int ghZl = (rank > 2) ? NumberOfGhostZones : 0;
-  int ghYl = (rank > 1) ? NumberOfGhostZones : 0;
-  int ghXl = NumberOfGhostZones;
-  int n3[] = {1, 1, 1};
-  for (int dim=0; dim<rank; dim++)
-    n3[dim] = ThisGrid->GridData->GetGridEndIndex(dim)
-            - ThisGrid->GridData->GetGridStartIndex(dim) + 1;
-  int x0len = n3[0] + 2*ghXl;
-  int x1len = n3[1] + 2*ghYl;
-  int x2len = n3[2] + 2*ghZl;
-  
   // access relevant fields
   float *UV, *Xr;
   Xr = ThisGrid->GridData->AccessRadiationFrequency0();
@@ -68,9 +56,9 @@ int DualFLD::EnforceBoundary(HierarchyEntry *ThisGrid) {
     if (OnBdry[0][0] && (XrBdryType[0][0]==1)) {
       for (k=0; k<LocDims[2]; k++)
 	for (j=0; j<LocDims[1]; j++)
-	  for (i=0; i<ghXl; i++) {
+	  for (i=0; i<GhDims[0][0]; i++) {
 	    idxbc = k*LocDims[1] + j;
-	    idx = ((k+ghZl)*x1len + j+ghYl)*x0len + i;
+	    idx = ((k+GhDims[2][0])*ArrDims[1] + j+GhDims[1][0])*ArrDims[0] + i;
 	    udata[idx] = XrBdryVals[0][0][idxbc]/EUnits;
 	  }
     }
@@ -79,8 +67,8 @@ int DualFLD::EnforceBoundary(HierarchyEntry *ThisGrid) {
       i = -1;  i2 = i+1;
       for (k=0; k<LocDims[2]; k++)
 	for (j=0; j<LocDims[1]; j++) {
-	  idx = ((k+ghZl)*x1len + j+ghYl)*x0len + i+ghXl;
-	  idx2 = ((k+ghZl)*x1len + j+ghYl)*x0len + i2+ghXl;
+	  idx = ((k+GhDims[2][0])*ArrDims[1] + j+GhDims[1][0])*ArrDims[0] + i+GhDims[0][0];
+	  idx2 = ((k+GhDims[2][0])*ArrDims[1] + j+GhDims[1][0])*ArrDims[0] + i2+GhDims[0][0];
 	  idxbc = k*LocDims[1] + j;
 	  udata[idx] = udata[idx2] + dxa*XrBdryVals[0][0][idxbc]/EUnits;
 	}
@@ -91,9 +79,9 @@ int DualFLD::EnforceBoundary(HierarchyEntry *ThisGrid) {
     if (OnBdry[0][1] && (XrBdryType[0][1]==1)) {
       for (k=0; k<LocDims[2]; k++)
 	for (j=0; j<LocDims[1]; j++)
-	  for (i=ArrDims[0]-ghXl; i<ArrDims[0]; i++) {
+	  for (i=ArrDims[0]-GhDims[0][0]; i<ArrDims[0]; i++) {
 	    idxbc = k*LocDims[1] + j;
-	    idx = ((k+ghZl)*x1len + j+ghYl)*x0len + i;
+	    idx = ((k+GhDims[2][0])*ArrDims[1] + j+GhDims[1][0])*ArrDims[0] + i;
 	    udata[idx] = XrBdryVals[0][1][idxbc]/EUnits;
 	  }
     }
@@ -102,8 +90,8 @@ int DualFLD::EnforceBoundary(HierarchyEntry *ThisGrid) {
       i = LocDims[0];  i2 = i-1;
       for (k=0; k<LocDims[2]; k++)
 	for (j=0; j<LocDims[1]; j++) {
-	  idx = ((k+ghZl)*x1len + j+ghYl)*x0len + i+ghXl;
-	  idx2 = ((k+ghZl)*x1len + j+ghYl)*x0len + i2+ghXl;
+	  idx = ((k+GhDims[2][0])*ArrDims[1] + j+GhDims[1][0])*ArrDims[0] + i+GhDims[0][0];
+	  idx2 = ((k+GhDims[2][0])*ArrDims[1] + j+GhDims[1][0])*ArrDims[0] + i2+GhDims[0][0];
 	  idxbc = k*LocDims[1] + j;
 	  udata[idx] = udata[idx2] + dxa*XrBdryVals[0][1][idxbc]/EUnits;
 	}
@@ -115,9 +103,9 @@ int DualFLD::EnforceBoundary(HierarchyEntry *ThisGrid) {
       //   Dirichlet
       if (OnBdry[1][0] && (XrBdryType[1][0]==1)) {
 	for (k=0; k<LocDims[2]; k++)
-	  for (j=0; j<ghYl; j++)
+	  for (j=0; j<GhDims[1][0]; j++)
 	    for (i=0; i<LocDims[0]; i++) {
-	      idx = ((k+ghZl)*x1len + j)*x0len + i+ghXl;
+	      idx = ((k+GhDims[2][0])*ArrDims[1] + j)*ArrDims[0] + i+GhDims[0][0];
 	      idxbc = i*LocDims[2] + k;
 	      udata[idx] = XrBdryVals[1][0][idxbc]/EUnits;
 	    }
@@ -127,8 +115,8 @@ int DualFLD::EnforceBoundary(HierarchyEntry *ThisGrid) {
 	j = -1;  j2 = j+1;
 	for (k=0; k<LocDims[2]; k++)
 	  for (i=0; i<LocDims[0]; i++) {
-	    idx = ((k+ghZl)*x1len + j+ghYl)*x0len + i+ghXl;
-	    idx2 = ((k+ghZl)*x1len + j2+ghYl)*x0len + i+ghXl;
+	    idx = ((k+GhDims[2][0])*ArrDims[1] + j+GhDims[1][0])*ArrDims[0] + i+GhDims[0][0];
+	    idx2 = ((k+GhDims[2][0])*ArrDims[1] + j2+GhDims[1][0])*ArrDims[0] + i+GhDims[0][0];
 	    idxbc = i*LocDims[2] + k;
 	    udata[idx] = udata[idx2] + dya*XrBdryVals[1][0][idxbc]/EUnits;
 	  }
@@ -138,9 +126,9 @@ int DualFLD::EnforceBoundary(HierarchyEntry *ThisGrid) {
       //   Dirichlet
       if (OnBdry[1][1] && (XrBdryType[1][1]==1)) {
 	for (k=0; k<LocDims[2]; k++)
-	  for (j=ArrDims[1]-ghYl; j<ArrDims[1]; j++)
+	  for (j=ArrDims[1]-GhDims[1][0]; j<ArrDims[1]; j++)
 	    for (i=0; i<LocDims[0]; i++) {
-	      idx = ((k+ghZl)*x1len + j)*x0len + i+ghXl;
+	      idx = ((k+GhDims[2][0])*ArrDims[1] + j)*ArrDims[0] + i+GhDims[0][0];
 	      idxbc = i*LocDims[2] + k;
 	      udata[idx] = XrBdryVals[1][1][idxbc]/EUnits;
 	    }
@@ -150,8 +138,8 @@ int DualFLD::EnforceBoundary(HierarchyEntry *ThisGrid) {
 	j = LocDims[1];  j2 = j-1;
 	for (k=0; k<LocDims[2]; k++)
 	  for (i=0; i<LocDims[0]; i++) {
-	    idx = ((k+ghZl)*x1len + j+ghYl)*x0len + i+ghXl;
-	    idx2 = ((k+ghZl)*x1len + j2+ghYl)*x0len + i+ghXl;
+	    idx = ((k+GhDims[2][0])*ArrDims[1] + j+GhDims[1][0])*ArrDims[0] + i+GhDims[0][0];
+	    idx2 = ((k+GhDims[2][0])*ArrDims[1] + j2+GhDims[1][0])*ArrDims[0] + i+GhDims[0][0];
 	    idxbc = i*LocDims[2] + k;
 	    udata[idx] = udata[idx2] + dya*XrBdryVals[1][1][idxbc]/EUnits;
 	  }
@@ -163,10 +151,10 @@ int DualFLD::EnforceBoundary(HierarchyEntry *ThisGrid) {
       // x2 left boundary
       //   Dirichlet
       if (OnBdry[2][0] && (XrBdryType[2][0]==1)) {
-	for (k=0; k<ghZl; k++)
+	for (k=0; k<GhDims[2][0]; k++)
 	  for (j=0; j<LocDims[1]; j++)
 	    for (i=0; i<LocDims[0]; i++) {
-	      idx = (k*x1len + j+ghYl)*x0len + i+ghXl;
+	      idx = (k*ArrDims[1] + j+GhDims[1][0])*ArrDims[0] + i+GhDims[0][0];
 	      idxbc = j*LocDims[0] + i;
 	      udata[idx] = XrBdryVals[2][0][idxbc]/EUnits;
 	    }
@@ -176,8 +164,8 @@ int DualFLD::EnforceBoundary(HierarchyEntry *ThisGrid) {
 	k = -1;  k2 = k+1;
 	for (j=0; j<LocDims[1]; j++)
 	  for (i=0; i<LocDims[0]; i++) {
-	    idx = ((k+ghZl)*x1len + j+ghYl)*x0len + i+ghXl;
-	    idx2 = ((k2+ghZl)*x1len + j+ghYl)*x0len + i+ghXl;
+	    idx = ((k+GhDims[2][0])*ArrDims[1] + j+GhDims[1][0])*ArrDims[0] + i+GhDims[0][0];
+	    idx2 = ((k2+GhDims[2][0])*ArrDims[1] + j+GhDims[1][0])*ArrDims[0] + i+GhDims[0][0];
 	    idxbc = j*LocDims[0] + i;
 	    udata[idx] = udata[idx2] + dza*XrBdryVals[2][0][idxbc]/EUnits;
 	  }
@@ -186,10 +174,10 @@ int DualFLD::EnforceBoundary(HierarchyEntry *ThisGrid) {
       // x2 right boundary
       //   Dirichlet
       if (OnBdry[2][1] && (XrBdryType[2][1]==1)) {
-	for (k=ArrDims[2]-ghZl; k<ArrDims[2]; k++)
+	for (k=ArrDims[2]-GhDims[2][0]; k<ArrDims[2]; k++)
 	  for (j=0; j<LocDims[1]; j++)
 	    for (i=0; i<LocDims[0]; i++) {
-	      idx = (k*x1len + j+ghYl)*x0len + i+ghXl;
+	      idx = (k*ArrDims[1] + j+GhDims[1][0])*ArrDims[0] + i+GhDims[0][0];
 	      idxbc = j*LocDims[0] + i;
 	      udata[idx] = XrBdryVals[2][1][idxbc]/EUnits;
 	    }
@@ -199,8 +187,8 @@ int DualFLD::EnforceBoundary(HierarchyEntry *ThisGrid) {
 	k = LocDims[2];  k2 = k-1;
 	for (j=0; j<LocDims[1]; j++)
 	  for (i=0; i<LocDims[0]; i++) {
-	    idx = ((k+ghZl)*x1len + j+ghYl)*x0len + i+ghXl;
-	    idx2 = ((k2+ghZl)*x1len + j+ghYl)*x0len + i+ghXl;
+	    idx = ((k+GhDims[2][0])*ArrDims[1] + j+GhDims[1][0])*ArrDims[0] + i+GhDims[0][0];
+	    idx2 = ((k2+GhDims[2][0])*ArrDims[1] + j+GhDims[1][0])*ArrDims[0] + i+GhDims[0][0];
 	    idxbc = j*LocDims[0] + i;
 	    udata[idx] = udata[idx2] + dza*XrBdryVals[2][1][idxbc]/EUnits;
 	  }
@@ -222,9 +210,9 @@ int DualFLD::EnforceBoundary(HierarchyEntry *ThisGrid) {
     if (OnBdry[0][0] && (UVBdryType[0][0]==1)) {
       for (k=0; k<LocDims[2]; k++)
 	for (j=0; j<LocDims[1]; j++)
-	  for (i=0; i<ghXl; i++) {
+	  for (i=0; i<GhDims[0][0]; i++) {
 	    idxbc = k*LocDims[1] + j;
-	    idx = ((k+ghZl)*x1len + j+ghYl)*x0len + i;
+	    idx = ((k+GhDims[2][0])*ArrDims[1] + j+GhDims[1][0])*ArrDims[0] + i;
 	    udata[idx] = UVBdryVals[0][0][idxbc]/EUnits;
 	  }
     }
@@ -233,8 +221,8 @@ int DualFLD::EnforceBoundary(HierarchyEntry *ThisGrid) {
       i = -1;  i2 = i+1;
       for (k=0; k<LocDims[2]; k++)
 	for (j=0; j<LocDims[1]; j++) {
-	  idx = ((k+ghZl)*x1len + j+ghYl)*x0len + i+ghXl;
-	  idx2 = ((k+ghZl)*x1len + j+ghYl)*x0len + i2+ghXl;
+	  idx = ((k+GhDims[2][0])*ArrDims[1] + j+GhDims[1][0])*ArrDims[0] + i+GhDims[0][0];
+	  idx2 = ((k+GhDims[2][0])*ArrDims[1] + j+GhDims[1][0])*ArrDims[0] + i2+GhDims[0][0];
 	  idxbc = k*LocDims[1] + j;
 	  udata[idx] = udata[idx2] + dxa*UVBdryVals[0][0][idxbc]/EUnits;
 	}
@@ -245,9 +233,9 @@ int DualFLD::EnforceBoundary(HierarchyEntry *ThisGrid) {
     if (OnBdry[0][1] && (UVBdryType[0][1]==1)) {
       for (k=0; k<LocDims[2]; k++)
 	for (j=0; j<LocDims[1]; j++)
-	  for (i=ArrDims[0]-ghXl; i<ArrDims[0]; i++) {
+	  for (i=ArrDims[0]-GhDims[0][0]; i<ArrDims[0]; i++) {
 	    idxbc = k*LocDims[1] + j;
-	    idx = ((k+ghZl)*x1len + j+ghYl)*x0len + i;
+	    idx = ((k+GhDims[2][0])*ArrDims[1] + j+GhDims[1][0])*ArrDims[0] + i;
 	    udata[idx] = UVBdryVals[0][1][idxbc]/EUnits;
 	  }
     }
@@ -256,8 +244,8 @@ int DualFLD::EnforceBoundary(HierarchyEntry *ThisGrid) {
       i = LocDims[0];  i2 = i-1;
       for (k=0; k<LocDims[2]; k++)
 	for (j=0; j<LocDims[1]; j++) {
-	  idx = ((k+ghZl)*x1len + j+ghYl)*x0len + i+ghXl;
-	  idx2 = ((k+ghZl)*x1len + j+ghYl)*x0len + i2+ghXl;
+	  idx = ((k+GhDims[2][0])*ArrDims[1] + j+GhDims[1][0])*ArrDims[0] + i+GhDims[0][0];
+	  idx2 = ((k+GhDims[2][0])*ArrDims[1] + j+GhDims[1][0])*ArrDims[0] + i2+GhDims[0][0];
 	  idxbc = k*LocDims[1] + j;
 	  udata[idx] = udata[idx2] + dxa*UVBdryVals[0][1][idxbc]/EUnits;
 	}
@@ -269,9 +257,9 @@ int DualFLD::EnforceBoundary(HierarchyEntry *ThisGrid) {
       //   Dirichlet
       if (OnBdry[1][0] && (UVBdryType[1][0]==1)) {
 	for (k=0; k<LocDims[2]; k++)
-	  for (j=0; j<ghYl; j++)
+	  for (j=0; j<GhDims[1][0]; j++)
 	    for (i=0; i<LocDims[0]; i++) {
-	      idx = ((k+ghZl)*x1len + j)*x0len + i+ghXl;
+	      idx = ((k+GhDims[2][0])*ArrDims[1] + j)*ArrDims[0] + i+GhDims[0][0];
 	      idxbc = i*LocDims[2] + k;
 	      udata[idx] = UVBdryVals[1][0][idxbc]/EUnits;
 	    }
@@ -281,8 +269,8 @@ int DualFLD::EnforceBoundary(HierarchyEntry *ThisGrid) {
 	j = -1;  j2 = j+1;
 	for (k=0; k<LocDims[2]; k++)
 	  for (i=0; i<LocDims[0]; i++) {
-	    idx = ((k+ghZl)*x1len + j+ghYl)*x0len + i+ghXl;
-	    idx2 = ((k+ghZl)*x1len + j2+ghYl)*x0len + i+ghXl;
+	    idx = ((k+GhDims[2][0])*ArrDims[1] + j+GhDims[1][0])*ArrDims[0] + i+GhDims[0][0];
+	    idx2 = ((k+GhDims[2][0])*ArrDims[1] + j2+GhDims[1][0])*ArrDims[0] + i+GhDims[0][0];
 	    idxbc = i*LocDims[2] + k;
 	    udata[idx] = udata[idx2] + dya*UVBdryVals[1][0][idxbc]/EUnits;
 	  }
@@ -292,9 +280,9 @@ int DualFLD::EnforceBoundary(HierarchyEntry *ThisGrid) {
       //   Dirichlet
       if (OnBdry[1][1] && (UVBdryType[1][1]==1)) {
 	for (k=0; k<LocDims[2]; k++)
-	  for (j=ArrDims[1]-ghYl; j<ArrDims[1]; j++)
+	  for (j=ArrDims[1]-GhDims[1][0]; j<ArrDims[1]; j++)
 	    for (i=0; i<LocDims[0]; i++) {
-	      idx = ((k+ghZl)*x1len + j)*x0len + i+ghXl;
+	      idx = ((k+GhDims[2][0])*ArrDims[1] + j)*ArrDims[0] + i+GhDims[0][0];
 	      idxbc = i*LocDims[2] + k;
 	      udata[idx] = UVBdryVals[1][1][idxbc]/EUnits;
 	    }
@@ -304,8 +292,8 @@ int DualFLD::EnforceBoundary(HierarchyEntry *ThisGrid) {
 	j = LocDims[1];  j2 = j-1;
 	for (k=0; k<LocDims[2]; k++)
 	  for (i=0; i<LocDims[0]; i++) {
-	    idx = ((k+ghZl)*x1len + j+ghYl)*x0len + i+ghXl;
-	    idx2 = ((k+ghZl)*x1len + j2+ghYl)*x0len + i+ghXl;
+	    idx = ((k+GhDims[2][0])*ArrDims[1] + j+GhDims[1][0])*ArrDims[0] + i+GhDims[0][0];
+	    idx2 = ((k+GhDims[2][0])*ArrDims[1] + j2+GhDims[1][0])*ArrDims[0] + i+GhDims[0][0];
 	    idxbc = i*LocDims[2] + k;
 	    udata[idx] = udata[idx2] + dya*UVBdryVals[1][1][idxbc]/EUnits;
 	  }
@@ -317,10 +305,10 @@ int DualFLD::EnforceBoundary(HierarchyEntry *ThisGrid) {
       // x2 left boundary
       //   Dirichlet
       if (OnBdry[2][0] && (UVBdryType[2][0]==1)) {
-	for (k=0; k<ghZl; k++)
+	for (k=0; k<GhDims[2][0]; k++)
 	  for (j=0; j<LocDims[1]; j++)
 	    for (i=0; i<LocDims[0]; i++) {
-	      idx = (k*x1len + j+ghYl)*x0len + i+ghXl;
+	      idx = (k*ArrDims[1] + j+GhDims[1][0])*ArrDims[0] + i+GhDims[0][0];
 	      idxbc = j*LocDims[0] + i;
 	      udata[idx] = UVBdryVals[2][0][idxbc]/EUnits;
 	    }
@@ -330,8 +318,8 @@ int DualFLD::EnforceBoundary(HierarchyEntry *ThisGrid) {
 	k = -1;  k2 = k+1;
 	for (j=0; j<LocDims[1]; j++)
 	  for (i=0; i<LocDims[0]; i++) {
-	    idx = ((k+ghZl)*x1len + j+ghYl)*x0len + i+ghXl;
-	    idx2 = ((k2+ghZl)*x1len + j+ghYl)*x0len + i+ghXl;
+	    idx = ((k+GhDims[2][0])*ArrDims[1] + j+GhDims[1][0])*ArrDims[0] + i+GhDims[0][0];
+	    idx2 = ((k2+GhDims[2][0])*ArrDims[1] + j+GhDims[1][0])*ArrDims[0] + i+GhDims[0][0];
 	    idxbc = j*LocDims[0] + i;
 	    udata[idx] = udata[idx2] + dza*UVBdryVals[2][0][idxbc]/EUnits;
 	  }
@@ -340,10 +328,10 @@ int DualFLD::EnforceBoundary(HierarchyEntry *ThisGrid) {
       // x2 right boundary
       //   Dirichlet
       if (OnBdry[2][1] && (UVBdryType[2][1]==1)) {
-	for (k=ArrDims[2]-ghZl; k<ArrDims[2]; k++)
+	for (k=ArrDims[2]-GhDims[2][0]; k<ArrDims[2]; k++)
 	  for (j=0; j<LocDims[1]; j++)
 	    for (i=0; i<LocDims[0]; i++) {
-	      idx = (k*x1len + j+ghYl)*x0len + i+ghXl;
+	      idx = (k*ArrDims[1] + j+GhDims[1][0])*ArrDims[0] + i+GhDims[0][0];
 	      idxbc = j*LocDims[0] + i;
 	      udata[idx] = UVBdryVals[2][1][idxbc]/EUnits;
 	    }
@@ -353,8 +341,8 @@ int DualFLD::EnforceBoundary(HierarchyEntry *ThisGrid) {
 	k = LocDims[2];  k2 = k-1;
 	for (j=0; j<LocDims[1]; j++)
 	  for (i=0; i<LocDims[0]; i++) {
-	    idx = ((k+ghZl)*x1len + j+ghYl)*x0len + i+ghXl;
-	    idx2 = ((k2+ghZl)*x1len + j+ghYl)*x0len + i+ghXl;
+	    idx = ((k+GhDims[2][0])*ArrDims[1] + j+GhDims[1][0])*ArrDims[0] + i+GhDims[0][0];
+	    idx2 = ((k2+GhDims[2][0])*ArrDims[1] + j+GhDims[1][0])*ArrDims[0] + i+GhDims[0][0];
 	    idxbc = j*LocDims[0] + i;
 	    udata[idx] = udata[idx2] + dza*UVBdryVals[2][1][idxbc]/EUnits;
 	  }

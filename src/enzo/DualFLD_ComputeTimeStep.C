@@ -24,8 +24,7 @@
 #include "DualFLD.h"
  
 
-float DualFLD::ComputeTimeStep(EnzoVector *uold, EnzoVector *unew)
-{
+float DualFLD::ComputeTimeStep(EnzoVector *uold, EnzoVector *unew) {
 
   // If timeAccuracyXr or timeAccuracyUV is set, compute maximum time 
   // step as estimate allowing timeAccuracy* relative error

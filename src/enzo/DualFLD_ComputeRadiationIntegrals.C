@@ -76,8 +76,7 @@ class CrossSection_type3 : public virtual SED {
 
 
 
-int DualFLD::ComputeRadiationIntegrals()
-{
+int DualFLD::ComputeRadiationIntegrals() {
 
   if (debug)  printf("Entering DualFLD::ComputeRadiationIntegrals\n");
 

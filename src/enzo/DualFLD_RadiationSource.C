@@ -38,32 +38,12 @@ class Source_Moment : public virtual SED {
   bool monochromatic() { return this->baseSED->monochromatic(); };
   float lower_bound() { return this->baseSED->lower_bound(); };
   float upper_bound() { return this->baseSED->upper_bound(); };
-  float value(float hnu) { return this->baseSED->value(hnu)*hnu*ev2erg/hplanck; };
+  float value(float hnu) { return this->baseSED->value(hnu)*13.6/hnu; };
 };
 
 
 int DualFLD::RadiationSource(HierarchyEntry *ThisGrid, int XrUV, float *Eta) {
 
-  // set dimension information
-  int ghZl = (rank > 2) ? NumberOfGhostZones : 0;
-  int ghYl = (rank > 1) ? NumberOfGhostZones : 0;
-  int ghXl = NumberOfGhostZones;
-  int n3[] = {1, 1, 1};
-  int dx[] = {1.0, 1.0, 1.0};
-  for (int dim=0; dim<rank; dim++) {
-    n3[dim] = ThisGrid->GridData->GetGridEndIndex(dim)
-            - ThisGrid->GridData->GetGridStartIndex(dim) + 1;
-    dx[dim] = ( ThisGrid->GridData->GetGridRightEdge(dim) -
-		ThisGrid->GridData->GetGridLeftEdge(dim) ) / n3[dim];
-  }
-  int x0len = n3[0] + 2*ghXl;
-  int x1len = n3[1] + 2*ghYl;
-  int x2len = n3[2] + 2*ghZl;
-  float x0L = ThisGrid->GridData->GetGridLeftEdge(0);
-  float x1L = ThisGrid->GridData->GetGridLeftEdge(1);
-  float x2L = ThisGrid->GridData->GetGridLeftEdge(2);
-  float lUn = (LenUnits + LenUnits0)*0.5;
-  
   // check that output field data exists
   if (Eta==NULL)
     ENZO_FAIL("DualFLD::Opacity ERROR: no Opacity array!");
@@ -75,6 +55,7 @@ int DualFLD::RadiationSource(HierarchyEntry *ThisGrid, int XrUV, float *Eta) {
   // initialize constants and reusable local variables
   int i, j, k, isrc, dim;
   float dV = 1.0;
+  float lUn = (LenUnits + LenUnits0)*0.5;
   for (dim=0; dim<rank; dim++) 
     dV *= (dx[dim]*lUn);       // cell volume (proper)
   float h_nu0 = 13.6*ev2erg;   // ionization energy of HI [ergs]
@@ -123,12 +104,12 @@ int DualFLD::RadiationSource(HierarchyEntry *ThisGrid, int XrUV, float *Eta) {
 
     // all sources have radius of one cell; count number of cells to receive source
     int num_cells = 0;
-    for (k=ghZl; k<n3[2]+ghZl; k++) {
-      cellZc = x2L + (k-ghZl+0.5)*dx[2];        // z-center (comoving) for this cell
-      for (j=ghYl; j<n3[1]+ghYl; j++) {
-	cellYc = x1L + (j-ghYl+0.5)*dx[1];      // y-center (comoving) for this cell
-	for (i=ghXl; i<n3[0]+ghXl; i++) {
-	  cellXc = x0L + (i-ghXl+0.5)*dx[0];    // x-center (comoving) for this cell
+    for (k=0; k<ArrDims[2]; k++) {
+      cellZc = EdgeVals[2][0] + (k-GhDims[2][0]+0.5)*dx[2];        // z-center (comoving) for this cell
+      for (j=0; j<ArrDims[1]; j++) {
+	cellYc = EdgeVals[1][0] + (j-GhDims[1][0]+0.5)*dx[1];      // y-center (comoving) for this cell
+	for (i=0; i<ArrDims[0]; i++) {
+	  cellXc = EdgeVals[0][0] + (i-GhDims[0][0]+0.5)*dx[0];    // x-center (comoving) for this cell
 	  if ( (fabs(cellXc-SourceLocation[isrc][0]) < dx[0]) &&
 	       (fabs(cellYc-SourceLocation[isrc][1]) < dx[1]) &&
 	       (fabs(cellZc-SourceLocation[isrc][2]) < dx[2]) )
@@ -139,16 +120,16 @@ int DualFLD::RadiationSource(HierarchyEntry *ThisGrid, int XrUV, float *Eta) {
 
     // equi-partition energy among affected cells
     float cell_energy = SourceEnergy[isrc] * total_integral * hnu0_HI * ev2erg / total_moment / num_cells / dV;
-    for (k=ghZl; k<n3[2]+ghZl; k++) {
-      cellZc = x2L + (k-ghZl+0.5)*dx[2];        // z-center (comoving) for this cell
-      for (j=ghYl; j<n3[1]+ghYl; j++) {
-	cellYc = x1L + (j-ghYl+0.5)*dx[1];      // y-center (comoving) for this cell
-	for (i=ghXl; i<n3[0]+ghXl; i++) {
-	  cellXc = x0L + (i-ghXl+0.5)*dx[0];    // x-center (comoving) for this cell
+    for (k=GhDims[2][0]; k<LocDims[2]+GhDims[2][0]; k++) {
+      cellZc = EdgeVals[2][0] + (k-GhDims[2][0]+0.5)*dx[2];        // z-center (comoving) for this cell
+      for (j=GhDims[1][0]; j<LocDims[1]+GhDims[1][0]; j++) {
+	cellYc = EdgeVals[1][0] + (j-GhDims[1][0]+0.5)*dx[1];      // y-center (comoving) for this cell
+	for (i=GhDims[0][0]; i<LocDims[0]+GhDims[0][0]; i++) {
+	  cellXc = EdgeVals[0][0] + (i-GhDims[0][0]+0.5)*dx[0];    // x-center (comoving) for this cell
 	  if ( (fabs(cellXc-SourceLocation[isrc][0]) < dx[0]) &&
 	       (fabs(cellYc-SourceLocation[isrc][1]) < dx[1]) &&
 	       (fabs(cellZc-SourceLocation[isrc][2]) < dx[2]) )
-	    Eta[(k*x1len + j)*x0len + i] += cell_energy;
+	    Eta[(k*ArrDims[1] + j)*ArrDims[0] + i] += cell_energy;
 	} // x-loop
       } // y-loop
     } // z-loop
@@ -162,13 +143,13 @@ int DualFLD::RadiationSource(HierarchyEntry *ThisGrid, int XrUV, float *Eta) {
 	
   switch (ProblemType) {
 
-  case 412:    // emissivity flux along x=0 wall (NGammaDot photons/s/cm^2)
+  case 432:    // emissivity flux along x=0 wall (NGammaDot photons/s/cm^2)
 	  
     // only relevant for UV radiation
     if (XrUV) {
 
       // place ionization sources along left wall (if on this subdomain)
-      if (x0L == 0.0) {
+      if (EdgeVals[0][0] == 0.0) {
 
 	// set up source SED and the "moment" SED
 	BlackbodySED BB_src(1.0e5);
@@ -183,10 +164,10 @@ int DualFLD::RadiationSource(HierarchyEntry *ThisGrid, int XrUV, float *Eta) {
 	// determine this group's portion of total blackbody emissivity
 	float wall_energy = 1e6 * hnu0_HI * ev2erg * tot_int / tot_mom / dx[0] / lUn;
 
-	// place along wall (i=ghXl)
-	for (k=ghZl; k<n3[2]+ghZl; k++)
-	  for (j=ghYl; j<n3[1]+ghYl; j++)
-	    Eta[(k*x1len + j)*x0len + ghXl] = wall_energy;
+	// place along wall (i=GhDims[0][0])
+	for (k=GhDims[2][0]; k<LocDims[2]+GhDims[2][0]; k++)
+	  for (j=GhDims[1][0]; j<LocDims[1]+GhDims[1][0]; j++)
+	    Eta[(k*ArrDims[1] + j)*ArrDims[0] + GhDims[0][0]] = wall_energy;
       }
     }
     break;

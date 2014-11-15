@@ -21,21 +21,8 @@
 #include "DualFLD.h"
 
 
-int DualFLD::ComputeOpacity(HierarchyEntry *ThisGrid, int XrUv, float *Opacity)
-{
+int DualFLD::ComputeOpacity(HierarchyEntry *ThisGrid, int XrUv, float *Opacity) {
 
-  // set dimension information
-  int ghZl = (rank > 2) ? NumberOfGhostZones : 0;
-  int ghYl = (rank > 1) ? NumberOfGhostZones : 0;
-  int ghXl = NumberOfGhostZones;
-  int n3[] = {1, 1, 1};
-  for (int dim=0; dim<rank; dim++)
-    n3[dim] = ThisGrid->GridData->GetGridEndIndex(dim)
-            - ThisGrid->GridData->GetGridStartIndex(dim) + 1;
-  int x0len = n3[0] + 2*ghXl;
-  int x1len = n3[1] + 2*ghYl;
-  int x2len = n3[2] + 2*ghZl;
-  
   // access chemistry fields
   float *HI=NULL, *HeI=NULL, *HeII=NULL;
   HI   = ThisGrid->GridData->AccessHIDensity();
@@ -73,12 +60,12 @@ int DualFLD::ComputeOpacity(HierarchyEntry *ThisGrid, int XrUv, float *Opacity)
 
   // Hydrogen-only calculation
   if (RadiativeTransferHydrogenOnly) {
-    for (i=0; i<x0len*x1len*x2len; i++) 
+    for (i=0; i<ArrDims[0]*ArrDims[1]*ArrDims[2]; i++) 
       Opacity[i] = HI[i]*HIconst;
     
   // Hydrogen + Helium calculation
   } else {
-    for (i=0; i<x0len*x1len*x2len; i++) 
+    for (i=0; i<ArrDims[0]*ArrDims[1]*ArrDims[2]; i++) 
       Opacity[i] = HI[i]*HIconst + HeI[i]*HeIconst + HeII[i]*HeIIconst;
   }
   

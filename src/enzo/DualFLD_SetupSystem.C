@@ -36,8 +36,7 @@
 
 
 int DualFLD::SetupSystem(HierarchyEntry *ThisGrid, int XrUv, float *E,
-			 float *Opacity, float *Eta, float &rhsnorm)
-{
+			 float *Opacity, float *Eta, float &rhsnorm) {
 
   // check that required field data exists
   if (E==NULL)
@@ -48,23 +47,11 @@ int DualFLD::SetupSystem(HierarchyEntry *ThisGrid, int XrUv, float *E,
     ENZO_FAIL("DualFLD::SetupSystem ERROR: no Eta array!");
 
   // set dimension information
-  int ghZl = (rank > 2) ? NumberOfGhostZones : 0;
-  int ghYl = (rank > 1) ? NumberOfGhostZones : 0;
-  int ghXl = NumberOfGhostZones;
-  int n3[] = {1, 1, 1};
-  int dx[] = {1.0, 1.0, 1.0};
+  int dxinv[] = {1.0, 1.0, 1.0};
   for (int dim=0; dim<rank; dim++) {
-    n3[dim] = ThisGrid->GridData->GetGridEndIndex(dim)
-            - ThisGrid->GridData->GetGridStartIndex(dim) + 1;
-    dx[dim] = ( ThisGrid->GridData->GetGridRightEdge(dim) -
-		ThisGrid->GridData->GetGridLeftEdge(dim) ) / n3[dim];
+    dxinv[dim] = LocDims[dim] / ( ThisGrid->GridData->GetGridRightEdge(dim) -
+				  ThisGrid->GridData->GetGridLeftEdge(dim) );
   }
-  int x0len = n3[0] + 2*ghXl;
-  int x1len = n3[1] + 2*ghYl;
-  int x2len = n3[2] + 2*ghZl;
-  float x0L = ThisGrid->GridData->GetGridLeftEdge(0);
-  float x1L = ThisGrid->GridData->GetGridLeftEdge(1);
-  float x2L = ThisGrid->GridData->GetGridLeftEdge(2);
   float rUn, rUn0;
   int xLbdry, xRbdry, yLbdry, yRbdry, zLbdry, zRbdry;
   if (XrUv) {
@@ -109,12 +96,12 @@ int DualFLD::SetupSystem(HierarchyEntry *ThisGrid, int XrUv, float *E,
     }
   }
 
-  float dxi  = 1.0/dx[0]/LenUnits;
-  float dyi  = 1.0/dx[1]/LenUnits;
-  float dzi  = 1.0/dx[2]/LenUnits;
-  float dxi0 = 1.0/dx[0]/LenUnits0;
-  float dyi0 = 1.0/dx[1]/LenUnits0;
-  float dzi0 = 1.0/dx[2]/LenUnits0;
+  float dxi  = dxinv[0]/LenUnits;
+  float dyi  = dxinv[1]/LenUnits;
+  float dzi  = dxinv[2]/LenUnits;
+  float dxi0 = dxinv[0]/LenUnits0;
+  float dyi0 = dxinv[1]/LenUnits0;
+  float dzi0 = dxinv[2]/LenUnits0;
   float dxfac = dtfac*dxi*dxi;
   float dyfac = dtfac*dyi*dyi;
   float dzfac = dtfac*dzi*dzi;
@@ -136,21 +123,21 @@ int DualFLD::SetupSystem(HierarchyEntry *ThisGrid, int XrUv, float *E,
 
   // iterate over the domain, computing the RHS array
 /*#pragma omp for reduction(+:rhsnorm) schedule(static) default(shared)*/
-  for (int i2=0; i2<n3[2]; i2++) {
-    int k2 = ghZl + i2;
-    for (int i1=0; i1<n3[1]; i1++) { 
-      int k1 = ghYl + i1;
-      for (int i0=0; i0<n3[0]; i0++) {
-	int k0 = ghXl + i0;
+  for (int i2=0; i2<LocDims[2]; i2++) {
+    int k2 = GhDims[2][0] + i2;
+    for (int i1=0; i1<LocDims[1]; i1++) { 
+      int k1 = GhDims[1][0] + i1;
+      for (int i0=0; i0<LocDims[0]; i0++) {
+	int k0 = GhDims[0][0] + i0;
 
 	// compute indices of neighboring Enzo cells
-	int k_l00 = k0-1 + x0len*(k1   + x1len*k2);
-	int k_0l0 = k0   + x0len*(k1-1 + x1len*k2);
-	int k_00l = k0   + x0len*(k1   + x1len*(k2-1));
-	int k_000 = k0   + x0len*(k1   + x1len*k2);
-	int k_00r = k0   + x0len*(k1   + x1len*(k2+1));
-	int k_0r0 = k0   + x0len*(k1+1 + x1len*k2);
-	int k_r00 = k0+1 + x0len*(k1   + x1len*k2);
+	int k_l00 = k0-1 + ArrDims[0]*(k1   + ArrDims[1]*k2);
+	int k_0l0 = k0   + ArrDims[0]*(k1-1 + ArrDims[1]*k2);
+	int k_00l = k0   + ArrDims[0]*(k1   + ArrDims[1]*(k2-1));
+	int k_000 = k0   + ArrDims[0]*(k1   + ArrDims[1]*k2);
+	int k_00r = k0   + ArrDims[0]*(k1   + ArrDims[1]*(k2+1));
+	int k_0r0 = k0   + ArrDims[0]*(k1+1 + ArrDims[1]*k2);
+	int k_r00 = k0+1 + ArrDims[0]*(k1   + ArrDims[1]*k2);
 
 	// declare loop-local variables
 	float Ediff[7], D[7], D0[7], vals[7];
@@ -181,7 +168,7 @@ int DualFLD::SetupSystem(HierarchyEntry *ThisGrid, int XrUv, float *E,
 			  Opacity[k_l00], NiUnits, LenUnits, dxi);
 
 	// x-directional limiter, upper face
-	Ediff[s_xr] = E[k_000] - E[k_r00];
+	Ediff[s_xr] = E[k_r00] - E[k_000];
 	D0[s_xr] = Limiter(E[k_000], E[k_r00], Opacity[k_000], 
 			   Opacity[k_r00], NiUnits0, LenUnits0, dxi0);
 	D[s_xr] = Limiter(E[k_000], E[k_r00], Opacity[k_000], 
@@ -189,7 +176,7 @@ int DualFLD::SetupSystem(HierarchyEntry *ThisGrid, int XrUv, float *E,
 
 	// y-directional limiter, upper face
 	if (rank > 1) {
-	  Ediff[s_yr] = E[k_000] - E[k_0r0];
+	  Ediff[s_yr] = E[k_0r0] - E[k_000];
 	  D0[s_yr] = Limiter(E[k_000], E[k_0r0], Opacity[k_000], 
 			     Opacity[k_0r0], NiUnits0, LenUnits0, dyi0);
 	  D[s_yr] = Limiter(E[k_000], E[k_0r0], Opacity[k_000], 
@@ -198,7 +185,7 @@ int DualFLD::SetupSystem(HierarchyEntry *ThisGrid, int XrUv, float *E,
 
 	// z-directional limiter, upper face
 	if (rank > 2) {
-	  Ediff[s_zr] = E[k_000] - E[k_00r];
+	  Ediff[s_zr] = E[k_00r] - E[k_000];
 	  D0[s_zr] = Limiter(E[k_000], E[k_00r], Opacity[k_000], 
 			     Opacity[k_00r], NiUnits0, LenUnits0, dzi0);
 	  D[s_zr] = Limiter(E[k_000], E[k_00r], Opacity[k_000], 
@@ -239,11 +226,11 @@ int DualFLD::SetupSystem(HierarchyEntry *ThisGrid, int XrUv, float *E,
 	for (int idx=0; idx<6; idx++)
 	  if (isinf(vals[idx]) || isnan(vals[idx])) {
 	    fprintf(stderr,"DualFLD::SetupSystem ERROR: illegal matrix value (%g)\n   "
-		    "proc = %i, i* = %i %i %i %i, n3 = %i %i %i, eta = %g, "
+		    "proc = %i, i* = %i %i %i %i, LocDims = %i %i %i, eta = %g, "
 		    "E = %g %g %g %g %g %g %g, dtfac = %g, dtfac0 = %g, "
 		    "kap = %g %g %g %g %g %g %g\n   D* = %g, %g, %g, %g, %g, %g\n   "
 		    "Ed* = %g %g %g %g %g %g\n\n",
-		    vals[idx], MyProcessorNumber, idx, i0, i1, i2, n3[0], n3[1], n3[2], 
+		    vals[idx], MyProcessorNumber, idx, i0, i1, i2, LocDims[0], LocDims[1], LocDims[2], 
 		    Eta[k_000], E[k_000], E[k_00l], E[k_0l0], E[k_l00], E[k_r00], E[k_0r0], 
 		    E[k_00r], dtfac, dtfac0, Opacity[k_000], Opacity[k_00l], 
 		    Opacity[k_0l0], Opacity[k_l00], Opacity[k_r00], Opacity[k_0r0], 
@@ -253,11 +240,11 @@ int DualFLD::SetupSystem(HierarchyEntry *ThisGrid, int XrUv, float *E,
 	  }
 	if (isinf(rhs) || isnan(rhs)) {
 	  fprintf(stderr,"DualFLD::SetupSystem ERROR: illegal vector value (%g)\n   "
-		  "proc = %i, i* = %i %i %i, n3 = %i %i %i, eta = %g, "
+		  "proc = %i, i* = %i %i %i, LocDims = %i %i %i, eta = %g, "
 		  "E = %g %g %g %g %g %g %g, dtfac = %g, dtfac0 = %g, "
 		  "kap = %g %g %g %g %g %g %g\n   D* = %g, %g, %g, %g, %g, %g\n   "
 		  "Ed* = %g %g %g %g %g %g\n\n",
-		  rhs, MyProcessorNumber, i0, i1, i2, n3[0], n3[1], n3[2], 
+		  rhs, MyProcessorNumber, i0, i1, i2, LocDims[0], LocDims[1], LocDims[2], 
 		  Eta[k_000], E[k_000], E[k_00l], E[k_0l0], E[k_l00], E[k_r00], E[k_0r0], 
 		  E[k_00r], dtfac, dtfac0, Opacity[k_000], Opacity[k_00l], 
 		  Opacity[k_0l0], Opacity[k_l00], Opacity[k_r00], Opacity[k_0r0], 
@@ -299,7 +286,7 @@ int DualFLD::SetupSystem(HierarchyEntry *ThisGrid, int XrUv, float *E,
 	}
 
 	//    x-right face
-	if ((OnBdry[0][1]) && (i0==n3[0]-1)) {
+	if ((OnBdry[0][1]) && (i0==LocDims[0]-1)) {
 	  if (xRbdry == 1)         // Dirichlet
 	    vals[s_xr] = 0.0;
 	  else if (xRbdry == 2) {  // Neumann
@@ -309,7 +296,7 @@ int DualFLD::SetupSystem(HierarchyEntry *ThisGrid, int XrUv, float *E,
 	}
 
 	//    y-right face
-	if ((rank > 1) && (OnBdry[1][1]) && (i1==n3[1]-1)) {
+	if ((rank > 1) && (OnBdry[1][1]) && (i1==LocDims[1]-1)) {
 	  if (yRbdry == 1)         // Dirichlet
 	    vals[s_yr] = 0.0;
 	  else if (yRbdry == 2) {  // Neumann
@@ -319,7 +306,7 @@ int DualFLD::SetupSystem(HierarchyEntry *ThisGrid, int XrUv, float *E,
 	}
 
 	//    z-right face
-	if ((rank > 2) && (OnBdry[2][1]) && (i2==n3[2]-1)) {
+	if ((rank > 2) && (OnBdry[2][1]) && (i2==LocDims[2]-1)) {
 	  if (zRbdry == 1)         // Dirichlet
 	    vals[s_zr] = 0.0;
 	  else if (zRbdry == 2) {  // Neumann

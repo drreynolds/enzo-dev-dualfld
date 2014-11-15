@@ -81,18 +81,15 @@ int grid::DualRHIonizationSteepInitializeGrid(float NumDensity,
   FieldType[DeNum = NumberOfBaryonFields++]  = ElectronDensity;
   FieldType[HINum = NumberOfBaryonFields++]  = HIDensity;
   FieldType[HIINum = NumberOfBaryonFields++] = HIIDensity;
-  if (!RadiativeTransferHydrogenOnly) {
-    FieldType[HeINum   = NumberOfBaryonFields++] = HeIDensity;
-    FieldType[HeIINum  = NumberOfBaryonFields++] = HeIIDensity;    
-    FieldType[HeIIINum = NumberOfBaryonFields++] = HeIIIDensity;
-  }
+  FieldType[HeINum   = NumberOfBaryonFields++] = HeIDensity;
+  FieldType[HeIINum  = NumberOfBaryonFields++] = HeIIDensity;    
+  FieldType[HeIIINum = NumberOfBaryonFields++] = HeIIIDensity;
+
   // set external chemistry/cooling rate fields
   FieldType[kphHINum = NumberOfBaryonFields++] = kphHI;
   FieldType[gammaNum = NumberOfBaryonFields++] = PhotoGamma;
-  if (!RadiativeTransferHydrogenOnly) {
-    FieldType[kphHeINum  = NumberOfBaryonFields++] = kphHeI;
-    FieldType[kphHeIINum = NumberOfBaryonFields++] = kphHeII;
-  }
+  FieldType[kphHeINum  = NumberOfBaryonFields++] = kphHeI;
+  FieldType[kphHeIINum = NumberOfBaryonFields++] = kphHeII;
   if (MultiSpecies > 1)
     FieldType[kdissH2INum = NumberOfBaryonFields++] = kdissH2I;
 
@@ -157,10 +154,8 @@ int grid::DualRHIonizationSteepInitializeGrid(float NumDensity,
     // set external chemistry/cooling rate fields
     for (i=0; i<size; i++)  BaryonField[kphHINum][i] = 0.0;
     for (i=0; i<size; i++)  BaryonField[gammaNum][i] = 0.0;
-    if (!RadiativeTransferHydrogenOnly) {
-      for (i=0; i<size; i++)  BaryonField[kphHeINum][i]  = 0.0;
-      for (i=0; i<size; i++)  BaryonField[kphHeIINum][i] = 0.0;
-    }
+    for (i=0; i<size; i++)  BaryonField[kphHeINum][i]  = 0.0;
+    for (i=0; i<size; i++)  BaryonField[kphHeIINum][i] = 0.0;
     if (MultiSpecies > 1)
       for (i=0; i<size; i++)  BaryonField[kdissH2INum][i] = 0.0;
 
@@ -246,16 +241,14 @@ int grid::DualRHIonizationSteepInitializeGrid(float NumDensity,
 	  nHII = nH*InitialFractionHII;
 	  nHI = nH - nHII;
 	  ne = nHII;
-	  if (!RadiativeTransferHydrogenOnly) {
-	    nHe = ndens*(1.0 - CoolData.HydrogenFractionByMass);
-	    nHeII = nHe*InitialFractionHeII;
-	    nHeIII = nHe*InitialFractionHeIII;
-	    nHeI = nHe - nHeII - nHeIII;
-	    ne = nHII + 0.25*nHeII + 0.5*nHeIII;
-	    BaryonField[HeINum][idx]   = nHeI*mh/DensityUnits;
-	    BaryonField[HeIINum][idx]  = nHeII*mh/DensityUnits;
-	    BaryonField[HeIIINum][idx] = nHeIII*mh/DensityUnits;
-	  }
+	  nHe = ndens*(1.0 - CoolData.HydrogenFractionByMass);
+	  nHeII = nHe*InitialFractionHeII;
+	  nHeIII = nHe*InitialFractionHeIII;
+	  nHeI = nHe - nHeII - nHeIII;
+	  ne = nHII + 0.25*nHeII + 0.5*nHeIII;
+	  BaryonField[HeINum][idx]   = nHeI*mh/DensityUnits;
+	  BaryonField[HeIINum][idx]  = nHeII*mh/DensityUnits;
+	  BaryonField[HeIIINum][idx] = nHeIII*mh/DensityUnits;
 	  BaryonField[RhoNum][idx] = nH*mh/DensityUnits;
 	  BaryonField[DeNum][idx]  = ne*mh/DensityUnits;
 	  BaryonField[HINum][idx]  = nHI*mh/DensityUnits;

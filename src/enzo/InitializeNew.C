@@ -186,6 +186,21 @@ int RHIonizationSteepInitialize(FILE *fptr, FILE *Outfptr,
 int CosmoIonizationInitialize(FILE *fptr, FILE *Outfptr,
 			      HierarchyEntry &TopGrid,
 			      TopGridData &MetaData, int local);
+int DualCosmoIonizationInitialize(FILE *fptr, FILE *Outfptr,
+				  HierarchyEntry &TopGrid,
+				  TopGridData &MetaData, int local);
+int DualRadConstTestInitialize(FILE *fptr, FILE *Outfptr,
+			       HierarchyEntry &TopGrid,
+			       TopGridData &MetaData, int local);
+int DualRHIonizationClumpInitialize(FILE *fptr, FILE *Outfptr,
+				    HierarchyEntry &TopGrid,
+				    TopGridData &MetaData, int local);
+int DualRHIonizationSteepInitialize(FILE *fptr, FILE *Outfptr,
+				    HierarchyEntry &TopGrid,
+				    TopGridData &MetaData, int local);
+int DualRHIonizationTestInitialize(FILE *fptr, FILE *Outfptr,
+				   HierarchyEntry &TopGrid,
+				   TopGridData &MetaData, int local);
 #endif /* TRANSFER */
 
 
@@ -695,6 +710,29 @@ int InitializeNew(char *filename, HierarchyEntry &TopGrid,
   // 414/415) Radiation-Hydrodynamics tests 14 & 15 -- Cosmological HI ioniz.
   if ((ProblemType == 414) || (ProblemType == 415))
     ret = CosmoIonizationInitialize(fptr, Outfptr, TopGrid, MetaData, 0);
+
+
+
+  // 430) Dual-FLD test 0 -- constant fields
+  if (ProblemType == 430)
+    ret = DualRadConstTestInitialize(fptr, Outfptr, TopGrid, MetaData, 0);
+
+  // 431) Dual-FLD test 1 -- ionization of a uniform field
+  if (ProblemType == 431)
+    ret = DualRHIonizationTestInitialize(fptr, Outfptr, TopGrid, MetaData, 0);
+
+  // 432) Dual-FLD test 2 -- ionization of a clump
+  if (ProblemType == 432)
+    ret = DualRHIonizationClumpInitialize(fptr, Outfptr, TopGrid, MetaData, 0);
+
+  // 433) Dual-FLD test 3 -- ionization of a 1/r^2 density field
+  if (ProblemType == 433)
+    ret = DualRHIonizationSteepInitialize(fptr, Outfptr, TopGrid, MetaData, 0);
+
+  // 434) Dual-FLD test 4 -- cosmological ionization of a uniform field
+  if (ProblemType == 434)
+    ret = DualCosmoIonizationInitialize(fptr, Outfptr, TopGrid, MetaData, 0);
+
 
 
   // 450-452) Free-streaming radiation tests

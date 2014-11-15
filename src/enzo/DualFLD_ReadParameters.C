@@ -55,8 +55,8 @@ int DualFLD::ReadParameters(TopGridData &MetaData, HierarchyEntry *ThisGrid) {
     }
 
   // set default solver parameters
-  sol_tolerance_Xr   = 1.0e-8;    // HYPRE solver tolerance
-  sol_tolerance_UV   = 1.0e-8;
+  sol_tolerance_Xr   = 1.0e-5;    // HYPRE solver tolerance
+  sol_tolerance_UV   = 1.0e-5;
   sol_MGmaxit_Xr     = 5;         // HYPRE max multigrid iters
   sol_MGmaxit_UV     = 3;
   sol_KryMaxit_Xr    = 3;         // HYPRE max Krylov iters
@@ -216,7 +216,10 @@ int DualFLD::ReadParameters(TopGridData &MetaData, HierarchyEntry *ThisGrid) {
   // set static radiation fields based on input values staticXr and staticUV
   XrStatic = (staticXr == 1);
   UVStatic = (staticUV == 1);
-
+  
+  // update static flags if a radiation field is unused
+  if (!UseXray)  XrStatic = 1;
+  if (!UseUV)    UVStatic = 1;
 
   //// Check input parameters ////
 
@@ -289,12 +292,12 @@ int DualFLD::ReadParameters(TopGridData &MetaData, HierarchyEntry *ThisGrid) {
 
   if (debug) {
     if (UseXray)
-      printf("DualFLD::ReadParameters p%"ISYM": XrBdryType = (%"ISYM":%"ISYM",%"ISYM":%"ISYM",%"ISYM":%"ISYM")\n",
-	     MyProcessorNumber, XrBdryType[0][0], XrBdryType[0][1], XrBdryType[1][0], 
+      printf("DualFLD::ReadParameters: XrBdryType = (%"ISYM":%"ISYM",%"ISYM":%"ISYM",%"ISYM":%"ISYM")\n",
+	     XrBdryType[0][0], XrBdryType[0][1], XrBdryType[1][0], 
 	     XrBdryType[1][1], XrBdryType[2][0], XrBdryType[2][1]);
     if (UseUV)
-      printf("DualFLD::ReadParameters p%"ISYM": UVBdryType = (%"ISYM":%"ISYM",%"ISYM":%"ISYM",%"ISYM":%"ISYM")\n",
-	     MyProcessorNumber, UVBdryType[0][0], UVBdryType[0][1], UVBdryType[1][0], 
+      printf("DualFLD::ReadParameters: UVBdryType = (%"ISYM":%"ISYM",%"ISYM":%"ISYM",%"ISYM":%"ISYM")\n",
+	     UVBdryType[0][0], UVBdryType[0][1], UVBdryType[1][0], 
 	     UVBdryType[1][1], UVBdryType[2][0], UVBdryType[2][1]);
   }
 
@@ -353,7 +356,7 @@ int DualFLD::ReadParameters(TopGridData &MetaData, HierarchyEntry *ThisGrid) {
 		   " is outside the computational domain. Halting run\n", isrc);
       }
     if (debug) {
-      printf("DualFLD::ReadParameters Xray source %"ISYM" at location ", isrc);
+      printf("DualFLD::ReadParameters Xray source %"ISYM": location =", isrc);
       for (dim=0; dim<rank; dim++)  printf(" %g", SourceLocationXr[isrc][dim]);
       printf("\n");
     }
@@ -366,7 +369,7 @@ int DualFLD::ReadParameters(TopGridData &MetaData, HierarchyEntry *ThisGrid) {
 		   " is outside the computational domain. Halting run\n", isrc);
       }
     if (debug) {
-      printf("DualFLD::ReadParameters UV source %"ISYM" at location ", isrc);
+      printf("DualFLD::ReadParameters UV source %"ISYM": location =", isrc);
       for (dim=0; dim<rank; dim++)  printf(" %g", SourceLocationUV[isrc][dim]);
       printf("\n");
     }
@@ -385,9 +388,11 @@ int DualFLD::ReadParameters(TopGridData &MetaData, HierarchyEntry *ThisGrid) {
     }
   if (debug) {
     for (isrc=0; isrc<NumSourcesXr; isrc++)
-      printf("DualFLD::ReadParameters Xray source %"ISYM": %g photons/sec\n", isrc, SourceEnergyXr[isrc]);
+      printf("DualFLD::ReadParameters Xray source %"ISYM": energy = %g photons/sec\n", 
+	     isrc, SourceEnergyXr[isrc]);
     for (isrc=0; isrc<NumSourcesUV; isrc++)
-      printf("DualFLD::ReadParameters UV source %"ISYM": %g photons/sec\n", isrc, SourceEnergyUV[isrc]);
+      printf("DualFLD::ReadParameters UV source %"ISYM": energy = %g photons/sec\n", 
+	     isrc, SourceEnergyUV[isrc]);
   }
 
   // if doing a weak-scaling run, adjust source locations appropriately
@@ -454,8 +459,8 @@ int DualFLD::ReadParameters(TopGridData &MetaData, HierarchyEntry *ThisGrid) {
   }
   autoScale = (autoscale != 0);  // set bool based on integer input
   if (debug)
-    printf("DualFLD::ReadParameters p%"ISYM": UVScale = %g, XrScale = %g, autoScale = %i\n",
-	   MyProcessorNumber,UVScale,XrScale,autoscale);
+    printf("DualFLD::ReadParameters: UVScale = %g, XrScale = %g, autoScale = %i\n",
+	   UVScale, XrScale, autoscale);
 
 
   // timeAccuracy* gives the desired percent change in values per step

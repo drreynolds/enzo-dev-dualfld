@@ -83,18 +83,15 @@ int grid::DualRHIonizationClumpInitializeGrid(float NumDensityIn,
   FieldType[DeNum = NumberOfBaryonFields++]    = ElectronDensity;
   FieldType[HINum = NumberOfBaryonFields++]    = HIDensity;
   FieldType[HIINum = NumberOfBaryonFields++]   = HIIDensity;
-  if (!RadiativeTransferHydrogenOnly) {
-    FieldType[HeINum   = NumberOfBaryonFields++] = HeIDensity;
-    FieldType[HeIINum  = NumberOfBaryonFields++] = HeIIDensity;    
-    FieldType[HeIIINum = NumberOfBaryonFields++] = HeIIIDensity;
-  }
+  FieldType[HeINum   = NumberOfBaryonFields++] = HeIDensity;
+  FieldType[HeIINum  = NumberOfBaryonFields++] = HeIIDensity;    
+  FieldType[HeIIINum = NumberOfBaryonFields++] = HeIIIDensity;
+
   // set external chemistry/cooling rate fields
   FieldType[kphHINum = NumberOfBaryonFields++] = kphHI;
   FieldType[gammaNum = NumberOfBaryonFields++] = PhotoGamma;
-  if (!RadiativeTransferHydrogenOnly) {
-    FieldType[kphHeINum  = NumberOfBaryonFields++] = kphHeI;
-    FieldType[kphHeIINum = NumberOfBaryonFields++] = kphHeII;
-  }
+  FieldType[kphHeINum  = NumberOfBaryonFields++] = kphHeI;
+  FieldType[kphHeIINum = NumberOfBaryonFields++] = kphHeII;
   if (MultiSpecies > 1)
     FieldType[kdissH2INum = NumberOfBaryonFields++] = kdissH2I;
 
@@ -172,10 +169,8 @@ int grid::DualRHIonizationClumpInitializeGrid(float NumDensityIn,
     // set external chemistry/cooling rate fields
     for (i=0; i<size; i++)  BaryonField[kphHINum][i] = 0.0;
     for (i=0; i<size; i++)  BaryonField[gammaNum][i] = 0.0;
-    if (!RadiativeTransferHydrogenOnly) {
-      for (i=0; i<size; i++)  BaryonField[kphHeINum][i]  = 0.0;
-      for (i=0; i<size; i++)  BaryonField[kphHeIINum][i] = 0.0;
-    }
+    for (i=0; i<size; i++)  BaryonField[kphHeINum][i]  = 0.0;
+    for (i=0; i<size; i++)  BaryonField[kphHeIINum][i] = 0.0;
     if (MultiSpecies > 1)
       for (i=0; i<size; i++)  BaryonField[kdissH2INum][i] = 0.0;
     
@@ -228,11 +223,9 @@ int grid::DualRHIonizationClumpInitializeGrid(float NumDensityIn,
 	  BaryonField[DeNum][idx]  = (Vout*DeConstOut + Vin*DeConstIn)/DensityUnits;
 	  BaryonField[HINum][idx]  = (Vout*HIConstOut + Vin*HIConstIn)/DensityUnits;
 	  BaryonField[HIINum][idx] = (Vout*HIIConstOut + Vin*HIIConstIn)/DensityUnits;
-	  if (!RadiativeTransferHydrogenOnly) {
-	    BaryonField[HeINum][idx]   = (Vout*HeIConstOut + Vin*HeIConstIn)/DensityUnits;
-	    BaryonField[HeIINum][idx]  = (Vout*HeIIConstOut + Vin*HeIIConstIn)/DensityUnits;
-	    BaryonField[HeIIINum][idx] = (Vout*HeIIIConstOut + Vin*HeIIIConstIn)/DensityUnits;
-	  }
+	  BaryonField[HeINum][idx]   = (Vout*HeIConstOut + Vin*HeIConstIn)/DensityUnits;
+	  BaryonField[HeIINum][idx]  = (Vout*HeIIConstOut + Vin*HeIIConstIn)/DensityUnits;
+	  BaryonField[HeIIINum][idx] = (Vout*HeIIIConstOut + Vin*HeIIIConstIn)/DensityUnits;
 	}
       }
     }
@@ -266,11 +259,9 @@ int grid::DualRHIonizationClumpInitializeGrid(float NumDensityIn,
       printf("      electrons = %g\n",DeConstOut);
       printf("            nHI = %g\n",HIConstOut);
       printf("           nHII = %g\n",HIIConstOut);
-      if (!RadiativeTransferHydrogenOnly) {
-	printf("           nHeI = %g\n",HeIConstOut);
-	printf("          nHeII = %g\n",HeIIConstOut);
-	printf("         nHeIII = %g\n",HeIIIConstOut);
-      }
+      printf("           nHeI = %g\n",HeIConstOut);
+      printf("          nHeII = %g\n",HeIIConstOut);
+      printf("         nHeIII = %g\n",HeIIIConstOut);
       
       printf("\n  Inside the clump:\n");
       printf("        density = %g\n",RhoConstIn);
@@ -287,11 +278,9 @@ int grid::DualRHIonizationClumpInitializeGrid(float NumDensityIn,
       printf("      electrons = %g\n",DeConstIn);
       printf("            nHI = %g\n",HIConstIn);
       printf("           nHII = %g\n",HIIConstIn);
-      if (!RadiativeTransferHydrogenOnly) {
-	printf("           nHeI = %g\n",HeIConstIn);
-	printf("          nHeII = %g\n",HeIIConstIn);
-	printf("         nHeIII = %g\n",HeIIIConstIn);
-      }
+      printf("           nHeI = %g\n",HeIConstIn);
+      printf("          nHeII = %g\n",HeIIConstIn);
+      printf("         nHeIII = %g\n",HeIIIConstIn);
     }
 
   } // end if NewData == TRUE

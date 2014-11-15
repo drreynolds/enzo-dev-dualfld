@@ -90,7 +90,8 @@ int grid::SolveHydroEquations(int CycleNumber, int NumberOfSubgrids,
     int NumberOfColours = 0, ColourNum;
 
     // use different color fields for RadiativeTransferFLD problems
-    //   first, the standard Enzo color field advection
+    //   first, the standard Enzo color field advection (assumes all 
+    //   fields from ElectronDensity on are color fields)
     if (MultiSpecies > 0 && RadiativeTransferFLD != 2) {
       NumberOfColours = 6 + 3*(MultiSpecies-1);
 
@@ -109,65 +110,91 @@ int grid::SolveHydroEquations(int CycleNumber, int NumberOfSubgrids,
     // second, the color field advection if using RadiativeTransferFLD for 
     // a radiation propagation problem (i.e. not using ray-tracing)
     if (RadiativeTransferFLD == 2) {
-      if (ImplicitProblem < 4)  {  // grey radiation problem
-	
-	// set the grey radiation field (required)
-	if ((ColourNum =
-	     FindField(RadiationFreq0, FieldType, NumberOfBaryonFields)) < 0) 
-	  ENZO_FAIL("Could not find RadiationFreq0.");
-	colnum[0] = ColourNum;
 
-	// check for other chemistry fields; add if they're present
-	//   ElectronDensity
-	if ((ColourNum =
-	     FindField(ElectronDensity, FieldType, NumberOfBaryonFields)) >= 0) 
-	  colnum[++NumberOfColours] = ColourNum;
-	//   HIDensity
-	if ((ColourNum =
-	     FindField(HIDensity, FieldType, NumberOfBaryonFields)) >= 0) 
-	  colnum[++NumberOfColours] = ColourNum;
-	//   HIIDensity
-	if ((ColourNum =
-	     FindField(HIIDensity, FieldType, NumberOfBaryonFields)) >= 0) 
-	  colnum[++NumberOfColours] = ColourNum;
-	//   HeIDensity
-	if ((ColourNum =
-	     FindField(HeIDensity, FieldType, NumberOfBaryonFields)) >= 0) 
-	  colnum[++NumberOfColours] = ColourNum;
-	//   HeIIDensity
-	if ((ColourNum =
-	     FindField(HeIIDensity, FieldType, NumberOfBaryonFields)) >= 0) 
-	  colnum[++NumberOfColours] = ColourNum;
-	//   HeIIIDensity
-	if ((ColourNum =
-	     FindField(HeIIIDensity, FieldType, NumberOfBaryonFields)) >= 0) 
-	  colnum[++NumberOfColours] = ColourNum;
-	//   HMDensity
-	if ((ColourNum =
-	     FindField(HMDensity, FieldType, NumberOfBaryonFields)) >= 0) 
-	  colnum[++NumberOfColours] = ColourNum;
-	//   H2IDensity
-	if ((ColourNum =
-	     FindField(H2IDensity, FieldType, NumberOfBaryonFields)) >= 0) 
-	  colnum[++NumberOfColours] = ColourNum;
-	//   H2IIDensity
-	if ((ColourNum =
-	     FindField(H2IIDensity, FieldType, NumberOfBaryonFields)) >= 0) 
-	  colnum[++NumberOfColours] = ColourNum;
-	//   DIDensity
-	if ((ColourNum =
-	     FindField(DIDensity, FieldType, NumberOfBaryonFields)) >= 0) 
-	  colnum[++NumberOfColours] = ColourNum;
-	//   DIIDensity
-	if ((ColourNum =
-	     FindField(DIIDensity, FieldType, NumberOfBaryonFields)) >= 0) 
-	  colnum[++NumberOfColours] = ColourNum;
-	//   HDIDensity
-	if ((ColourNum =
-	     FindField(HDIDensity, FieldType, NumberOfBaryonFields)) >= 0) 
-	  colnum[++NumberOfColours] = ColourNum;
-      }
-    }
+      // set any radiation fields that are present in the problem
+      if ((ColourNum =
+	   FindField(RadiationFreq0, FieldType, NumberOfBaryonFields)) >= 0) 
+	colnum[NumberOfColours++] = ColourNum;
+      if ((ColourNum =
+	   FindField(RadiationFreq1, FieldType, NumberOfBaryonFields)) >= 0) 
+	colnum[NumberOfColours++] = ColourNum;
+      if ((ColourNum =
+	   FindField(RadiationFreq2, FieldType, NumberOfBaryonFields)) >= 0) 
+	colnum[NumberOfColours++] = ColourNum;
+      if ((ColourNum =
+	   FindField(RadiationFreq3, FieldType, NumberOfBaryonFields)) >= 0) 
+	colnum[NumberOfColours++] = ColourNum;
+      if ((ColourNum =
+	   FindField(RadiationFreq4, FieldType, NumberOfBaryonFields)) >= 0) 
+	colnum[NumberOfColours++] = ColourNum;
+      if ((ColourNum =
+	   FindField(RadiationFreq5, FieldType, NumberOfBaryonFields)) >= 0) 
+	colnum[NumberOfColours++] = ColourNum;
+      if ((ColourNum =
+	   FindField(RadiationFreq6, FieldType, NumberOfBaryonFields)) >= 0) 
+	colnum[NumberOfColours++] = ColourNum;
+      if ((ColourNum =
+	   FindField(RadiationFreq7, FieldType, NumberOfBaryonFields)) >= 0) 
+	colnum[NumberOfColours++] = ColourNum;
+      if ((ColourNum =
+	   FindField(RadiationFreq8, FieldType, NumberOfBaryonFields)) >= 0) 
+	colnum[NumberOfColours++] = ColourNum;
+      if ((ColourNum =
+	   FindField(RadiationFreq9, FieldType, NumberOfBaryonFields)) >= 0) 
+	colnum[NumberOfColours++] = ColourNum;
+      
+      // check for other chemistry fields; add if they're present
+      //   ElectronDensity
+      if ((ColourNum =
+	   FindField(ElectronDensity, FieldType, NumberOfBaryonFields)) >= 0) 
+	colnum[NumberOfColours++] = ColourNum;
+      //   HIDensity
+      if ((ColourNum =
+	   FindField(HIDensity, FieldType, NumberOfBaryonFields)) >= 0) 
+	colnum[NumberOfColours++] = ColourNum;
+      //   HIIDensity
+      if ((ColourNum =
+	   FindField(HIIDensity, FieldType, NumberOfBaryonFields)) >= 0) 
+	colnum[NumberOfColours++] = ColourNum;
+      //   HeIDensity
+      if ((ColourNum =
+	   FindField(HeIDensity, FieldType, NumberOfBaryonFields)) >= 0) 
+	colnum[NumberOfColours++] = ColourNum;
+      //   HeIIDensity
+      if ((ColourNum =
+	   FindField(HeIIDensity, FieldType, NumberOfBaryonFields)) >= 0) 
+	colnum[NumberOfColours++] = ColourNum;
+      //   HeIIIDensity
+      if ((ColourNum =
+	   FindField(HeIIIDensity, FieldType, NumberOfBaryonFields)) >= 0) 
+	colnum[NumberOfColours++] = ColourNum;
+      //   HMDensity
+      if ((ColourNum =
+	   FindField(HMDensity, FieldType, NumberOfBaryonFields)) >= 0) 
+	colnum[NumberOfColours++] = ColourNum;
+      //   H2IDensity
+      if ((ColourNum =
+	   FindField(H2IDensity, FieldType, NumberOfBaryonFields)) >= 0) 
+	colnum[NumberOfColours++] = ColourNum;
+      //   H2IIDensity
+      if ((ColourNum =
+	   FindField(H2IIDensity, FieldType, NumberOfBaryonFields)) >= 0) 
+	colnum[NumberOfColours++] = ColourNum;
+      //   DIDensity
+      if ((ColourNum =
+	   FindField(DIDensity, FieldType, NumberOfBaryonFields)) >= 0) 
+	colnum[NumberOfColours++] = ColourNum;
+      //   DIIDensity
+      if ((ColourNum =
+	   FindField(DIIDensity, FieldType, NumberOfBaryonFields)) >= 0) 
+	colnum[NumberOfColours++] = ColourNum;
+      //   HDIDensity
+      if ((ColourNum =
+	   FindField(HDIDensity, FieldType, NumberOfBaryonFields)) >= 0) 
+	colnum[NumberOfColours++] = ColourNum;
+
+    } // if (RadiativeTransferFLD == 2)
+
 
     /* Add "real" colour fields (metallicity, etc.) as colour variables. */
 

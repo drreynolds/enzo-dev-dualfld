@@ -113,7 +113,7 @@ DualFLD::DualFLD() {
   Err_cur_Xr     = 1.0;
   Err_cur_UV     = 1.0;
   Err_new_Xr     = 1.0;
-  Err_new_Xr     = 1.0;
+  Err_new_UV     = 1.0;
   dtnorm         = 0.0;
   dtgrowth       = 1.1;
   tnew           = -1.0;
@@ -187,7 +187,9 @@ DualFLD::DualFLD() {
   UV_SED = NULL;
 
   // private solver storage
-  sol = NULL;
+  sol    = NULL;
+  U      = NULL;
+  EtaVec = NULL;
 
 }
 #endif

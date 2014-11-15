@@ -148,24 +148,17 @@ int DualRHIonizationSteepInitialize(FILE *fptr, FILE *Outfptr,
   // convert input temperature to internal energy
   Temperature = max(Temperature,MIN_TEMP); // enforce minimum
   float nH, HI, HII, nHe, HeI, HeII, HeIII, ne, num_dens, mu;
-  if (RadiativeTransferHydrogenOnly) {
-    HI = 1.0 - InitialFractionHII;
-    HII = InitialFractionHII;
-    ne = HII;
-    num_dens = HI + HII + ne;
-    mu = 1.0/num_dens;
-  } else {
-    nH = CoolData.HydrogenFractionByMass;
-    nHe = (1.0 - CoolData.HydrogenFractionByMass);
-    HI = nH*(1.0 - InitialFractionHII);
-    HII = nH*InitialFractionHII;
-    HeII = nHe*InitialFractionHeII;
-    HeIII = nHe*InitialFractionHeIII;
-    HeI = nHe - HeII - HeIII;
-    ne = HII + HeII/4.0 + HeIII/2.0;
-    num_dens = 0.25*(HeI + HeII + HeIII) + HI + HII + ne;
-    mu = 1.0/num_dens;
-  }
+  nH = CoolData.HydrogenFractionByMass;
+  nHe = (1.0 - CoolData.HydrogenFractionByMass);
+  HI = nH*(1.0 - InitialFractionHII);
+  HII = nH*InitialFractionHII;
+  HeII = nHe*InitialFractionHeII;
+  HeIII = nHe*InitialFractionHeIII;
+  HeI = nHe - HeII - HeIII;
+  ne = HII + HeII/4.0 + HeIII/2.0;
+  num_dens = 0.25*(HeI + HeII + HeIII) + HI + HII + ne;
+  mu = 1.0/num_dens;
+
   // compute the internal energy
   float IEnergy = kboltz*Temperature/mu/mh/(Gamma-1.0);	
 
@@ -202,19 +195,15 @@ int DualRHIonizationSteepInitialize(FILE *fptr, FILE *Outfptr,
   DataLabel[BaryonField++] = DeName;
   DataLabel[BaryonField++] = HIName;
   DataLabel[BaryonField++] = HIIName;
-  if (!RadiativeTransferHydrogenOnly) {
-    DataLabel[BaryonField++] = HeIName;
-    DataLabel[BaryonField++] = HeIIName;
-    DataLabel[BaryonField++] = HeIIIName;
-  }
+  DataLabel[BaryonField++] = HeIName;
+  DataLabel[BaryonField++] = HeIIName;
+  DataLabel[BaryonField++] = HeIIIName;
 
   // if using external chemistry/cooling, set rate labels and update params
   DataLabel[BaryonField++] = kphHIName;
   DataLabel[BaryonField++] = gammaName;
-  if (!RadiativeTransferHydrogenOnly) {
-    DataLabel[BaryonField++] = kphHeIName;
-    DataLabel[BaryonField++] = kphHeIIName;
-  }
+  DataLabel[BaryonField++] = kphHeIName;
+  DataLabel[BaryonField++] = kphHeIIName;
   if (MultiSpecies > 1)
     DataLabel[BaryonField++] = kdissH2IName;
 
