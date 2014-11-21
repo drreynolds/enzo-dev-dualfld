@@ -317,7 +317,7 @@ int DualFLD::SetupSystem(HierarchyEntry *ThisGrid, int XrUv, float *E,
 
 	
 	// insert matrix, rhs and initial solution entries into HYPRE objects
-	Eint32 iloc[] = {i0, i1, i2};
+	Eint32 iloc[] = {SolvIndices[0][0]+i0, SolvIndices[1][0]+i1, SolvIndices[2][0]+i2};
 	float zero=0.0;
 	HYPRE_StructVectorSetBoxValues(rhsvec, iloc, iloc, &rhs);
 	HYPRE_StructVectorSetBoxValues(solvec, iloc, iloc, &zero);
