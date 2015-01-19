@@ -24,3 +24,11 @@ Flux Limited Diffusion
 
 More details can be found in the paper Reynolds et al. (2009, Journal
 of Computational Physics 228, 6833).
+
+
+
+.. _radiative_transfer_dualfld:
+
+Dual Flux Limited Diffusion (UV + X-ray)
+--------------------------------------------
+

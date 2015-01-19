@@ -206,6 +206,10 @@ Radiative Transfer (FLD) Parameters
 ``uv_param`` (external)
     When using the FLD radiation transfer and StarMakerEmissivityFIeld = 1, this is the efficiency of mass to UV light ratio. Default: 0
 
+
+
+.. _radiative_transfer_fld_implicit:
+
 Radiative Transfer (FLD) Implicit Solver Parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -362,6 +366,10 @@ Radiative Transfer (FLD) Implicit Solver Parameters
 ``PlanckOpacityC0``, ``PlanckOpacityC1``, ``PlanckOpacityC2``, ``PlanckOpacityC3``, ``PlanckOpacityC4`` (external)
     Parameters used in defining the Planck-mean opacity used with
     ``RadHydroModel`` 10. Default: [1 1 0 1 0].
+
+
+
+.. _radiative_transfer_fld_split:
 
 Radiative Transfer (FLD) Split Solver Parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -521,4 +529,226 @@ Radiative Transfer (FLD) Split Solver Parameters
 ``EnergyOpacityC0``, ``EnergyOpacityC1``, ``EnergyOpacityC2`` (external)
     Parameters used in defining the energy-mean opacity used with
     RadHydroModel 10. Default: [1 1 0].
+
+
+
+.. _radiative_transfer_dualfld:
+
+Radiative Transfer (Dual FLD -- UV+X-ray) Split Solver Parameters
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    These parameters should be placed within the file named in
+    ``RadHydroParamfile`` in the main parameter file. A description of
+    the physical and mathematical models used within this solver
+    module are included in :ref:`radiative_transfer_dualfld`.
+
+
+``DualFLDIsothermal`` (external)
+    Boolean flag that denotes whether to freeze chemistry rates based
+    on initial temperatures.  Default: 0 (off).
+``DualFLDUseXray`` (external)
+    Boolean flag to enable propagation of X-ray radiation.  Default: 1 (on).
+``DualFLDUseUV`` (external)
+    Boolean flag to enable propagation of UV radiation.  Default: 1 (on).
+``DualFLDXrayStatic`` (external)
+    Boolean flag to treat X-ray radiation field as static throughout
+    the simulation (holds at initial condition).  Default: 0 (off).
+``DualFLDUVStatic`` (external)
+    Boolean flag to treat UV radiation field as static throughout the
+    simulation (holds at initial condition).  Default 0 (off).
+``DualFLDXrayDiffusive`` (external)
+    Boolean flag to replace the standard flux-limiter with a simple
+    diffusion approximation for the X-ray radiation field.  Also
+    disables X-ray dynamics from limiting the FLD time step size.
+    Default: 0 (off).
+``DualFLDUVSpectrum`` (external)
+    Flag denoting type of UV radiation SED.  Default: -1.
+
+   ::
+
+    -1 - monochromatic spectrum at specified frequency in eV (see next parameter)
+    0  - power law spectrum, (nu / nu_{HI})^(-v) where v is provided in the next parameter
+    1  - blackbody spectrum at T=1e5 K
+    2  - PopII SED
+
+``DualFLDUVFrequency`` (external)
+    Parameter used in formulas for ``DualFLDUVSpectrum`` choices -1 and 0 above.  Default: 13.6.
+``DualFLDXraySpectrum`` (external)
+    Flag denoting type of X-ray radiation SED.  Values have identical
+    meaning as for ``DualFLDUVSpectrum`` above.  Default: -1
+``DualFLDXrayFrequency`` (external)
+    Parameter used in formulas for ``DualFLDXraySpectrum`` choices -1 and 0 above.  Default: 500.0.
+``DualFLDMaxDt`` (external)
+    Maximum time step to use in the FLD solver. Default: 1e20 (no limit).
+``DualFLDMinDt`` (external)
+    Minimum time step to use in the FLD solver. Default: 0.0 (no limit).
+``DualFLDInitDt`` (external)
+    Initial time step to use in the FLD solver. Default: 1e20 (uses hydro time step).
+``DualFLDDtNorm`` (external)
+    Type of p-norm to use in estimating time-accuracy for predicting
+    next time step,
+
+    .. math::
+
+       \|v\|_p = \left(\sum_{i=1}^N |v_i|^p\right)^{1/p}.
+
+    Default: 2.0.
+
+   ::
+
+    0  - use the max-norm.
+    >0 - use the specified p-norm.
+    <0 - illegal.
+
+``DualFLDDtGrowth`` (external)
+    Maximum time step size growth factor.  Default: 1.1
+``DualFLDDtControl`` (external)
+    Algorithm to use in performing time step adaptivity.  Default: 2
+
+   ::
+
+    0  - I controller
+    1  - PI controller
+    2  - PID controller
+    else  - original FLD time step controller
+
+``DualFLDUVTimeAccuracy`` (external)
+    Desired relative change in UV radiation field (as measured in
+    p-norm specified by ``DualFLDDtNorm`` above). Default: 1e20 (no
+    limit). 
+``DualFLDXrayTimeAccuracy`` (external)
+    Desired relative change in X-ray radiation field (as measured in
+    p-norm specified by ``DualFLDDtNorm`` above). Any input value is
+    over-written with the default when ``DualFLDXrayDiffusive`` is
+    enabled.  Default: 1e20 (no limit). 
+``DualFLDUVScaling`` (external)
+    Scaling factor for the UV radiation field, in case Enzo's standard
+    non-dimensionalization fails. Default: 1.0.
+``DualFLDXrayScaling`` (external)
+    Scaling factor for the X-ray radiation field, in case Enzo's standard
+    non-dimensionalization fails. Default: 1.0.
+``DualFLDAutoScaling`` (external)
+    Boolean flag enabling an heuristic approach to update the above
+    scaling factors internally.  Works well for reioniztaion
+    calculations, but is not recommended for problems in which the
+    optimal unit scaling factor is known a-priori. Default: 1 
+``DualFLDTheta`` (external)
+    Time-discretization parameter to use, 0 gives explicit Euler, 1
+    gives implicit Euler, 0.5 gives trapezoidal. Default: 1.0.
+``DualFLDUVBoundaryX0Faces`` (external)
+    Boundary condition types to use on the x0 faces of the UV
+    radiation field. Default: [0 0].
+
+    ::
+
+     0 - Periodic.
+     1 - Dirichlet.
+     2 - Neumann.
+
+``DualFLDUVBoundaryX1Faces`` (external)
+    Boundary condition types to use on the x1 faces of the UV
+    radiation field. Default: [0 0].
+``DualFLDUVBoundaryX2Faces`` (external)
+    Boundary condition types to use on the x2 faces of the UV
+    radiation field. Default: [0 0]. 
+``DualFLDXrayBoundaryX0Faces`` (external)
+    Boundary condition types to use on the x0 faces of the X-ray
+    radiation field. Values have the same meaning as for
+    ``DualFLDUVBoundaryX0Faces`` above. Default: [0 0].
+``DualFLDXrayBoundaryX1Faces`` (external)
+    Boundary condition types to use on the x1 faces of the X-ray
+    radiation field. Default: [0 0].
+``DualFLDXrayBoundaryX2Faces`` (external)
+    Boundary condition types to use on the x2 faces of the X-ray
+    radiation field. Default: [0 0].
+``DualFLDSolToleranceXray`` (external)
+    Desired accuracy for X-ray solution to satisfy linear residual
+    (measured in the 2-norm). Default: 1e-5.
+``DualFLDSolToleranceUV`` (external)
+    Desired accuracy for UV solution to satisfy linear residual
+    (measured in the 2-norm). Default: 1e-5.
+``DualFLDMaxMGItersXray`` (external)
+    Allowed number of iterations for the X-ray inner linear solver
+    (geometric multigrid). Default: 5.
+``DualFLDMaxMGItersUV`` (external)
+    Allowed number of iterations for the UV inner linear solver
+    (geometric multigrid). Default: 3.
+``DualFLDMaxKryItersXray`` (external)
+    Allowed number of iterations for the X-ray outer Krylov linear
+    solver. Default: 3. 
+``DualFLDMaxKryItersUV`` (external)
+    Allowed number of iterations for the UV outer Krylov linear
+    solver. Default: 2. 
+``DualFLDMGRelaxTypeXray`` (external)
+    Relaxation method used by the X-ray multigrid solver. Default: 2. 
+
+    ::
+
+     0 - Jacobi
+     1 - Weighted Jacobi
+     2 - Red/Black Gauss-Seidel (symmetric)
+     3 - Red/Black Gauss-Seidel (non-symmetric)
+
+``DualFLDMGRelaxTypeUV`` (external)
+    Relaxation method used by the UV multigrid solver. Values have the
+    same meanings as for ``DualFLDMGRelaxTypeXray`` above.  Default: 1. 
+``DualFLDMGPreRelaxXray`` (external)
+    Number of pre-relaxation sweeps used by the X-ray multigrid solver.
+    Default: 3.
+``DualFLDMGPreRelaxUV`` (external)
+    Number of pre-relaxation sweeps used by the UV multigrid solver.
+    Default: 1.
+``DualFLDMGPostRelaxXray`` (external)
+    Number of post-relaxation sweeps used by the X-ray multigrid
+    solver.  Default: 3.
+``DualFLDMGPostRelaxUV`` (external)
+    Number of post-relaxation sweeps used by the UV multigrid
+    solver.  Default: 1.
+``DualFLDKrylovMethodXray`` (external)
+    Choice for outer Krylov method in X-ray solver.  Default: 1
+
+   ::
+
+    0  - preconditioned Conjugate Gradient (PCG)
+    1  - preconditioned/stabilized  Bi-Conjugate Gradient (BiCGStab)
+    2  - generalized minimum resdual (GMRES)
+
+``DualFLDKrylovMethodUV`` (external)
+    Choice for outer Krylov method in UV solver.  Values have the same
+    meanings as for ``DualFLDKrylovMethodXray`` above.  Default: 1
+``DualFLDLimiterRmin`` (external)
+    Minimum normalized :math:`R` value in flux limiter formulation.
+    Default: 1e-2
+``DualFLDLimiterDmax`` (external)
+    Maximum normalized :math:`D` value in flux limiter formulation.
+    Default: 1e-2
+``DualFLDLimiterKmin`` (external)
+    Minimum normalized face-valued opacity value in flux limiter
+    formulation.  Default: 1e-20
+``DualFLDLimiterEmin`` (external)
+    Minimum normalized face-valued radiation energy density value in
+    flux limiter formulation.  Default: 1e-30
+``DualFLDWeakScaling`` (external)
+    Boolean flag enabling replication of radiation sources within each
+    root grid tile (for weak-scaling runs).  Default: 0 (off)
+``DualFLDNumSourcesXray`` (external)
+    Number of parameter-file-defined X-ray radiation sources (to be
+    specified using the ``DualFLDSourceLocationXray`` and
+    ``DualFLDSourceEnergyXray`` parameters.  Default: 0
+``DualFLDNumSourcesUV`` (external)
+    Number of parameter-file-defined UV radiation sources (to be
+    specified using the ``DualFLDSourceLocationUV`` and
+    ``DualFLDSourceEnergyUV`` parameters.  Default: 0
+``DualFLDSourceLocationXray[isrc]`` (external)
+    Location to place X-ray radiation source ``isrc`` in box, using
+    normalized units. Default: [0.0 0.0 0.0].
+``DualFLDSourceLocationUV[isrc]`` (external)
+    Location to place UV radiation source ``isrc`` in box, using
+    normalized units. Default: [0.0 0.0 0.0].
+``DualFLDSourceEnergyXray[isrc]`` (external)
+    Ionization source energy for X-ray source ``isrc``, in units of
+    photons/s.  Description.  Default: 0.0
+``DualFLDSourceEnergyUV[isrc]`` (external)
+    Ionization source energy for UV source ``isrc``, in units of
+    photons/s.  Description.  Default: 0.0
 

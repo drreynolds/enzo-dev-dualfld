@@ -123,12 +123,12 @@ DualFLD::DualFLD() {
   theta          = -1.0;
 
   // initialize problem defining data 
-  isothermal   = 0;
-  UseXray      = false;
-  UseUV        = false;
-  XrStatic     = false;
-  UVStatic     = false;
-  // NGammaDotXr  = 0.0;
+  isothermal    = 0;
+  UseXray       = false;
+  UseUV         = false;
+  XrStatic      = false;
+  UVStatic      = false;
+  XrayDiffusive = false;
   // NGammaDotUV  = 0.0;
   // EtaRadius    = 0.0;
   // EtaCenter[0] = 0.0;

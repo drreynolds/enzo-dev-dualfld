@@ -140,56 +140,104 @@ int DualFLD::SetupSystem(HierarchyEntry *ThisGrid, int XrUv, float *E,
 	int k_r00 = k0+1 + ArrDims[0]*(k1   + ArrDims[1]*k2);
 
 	// declare loop-local variables
-	float Ediff[7], D[7], D0[7], vals[7];
+	float Ediff[7], D[7], D0[7], vals[7], Eavg;
 
 	// z-directional limiter, lower face
 	if (rank > 2) {
 	  Ediff[s_zl] = E[k_000] - E[k_00l];
-	  D0[s_zl] = Limiter(E[k_000], E[k_00l], Opacity[k_000], 
-			     Opacity[k_00l], NiUnits0, LenUnits0, dzi0);
-	  D[s_zl] = Limiter(E[k_000], E[k_00l], Opacity[k_000], 
-			    Opacity[k_00l], NiUnits, LenUnits, dzi);
+	  if (!XrUv && XrayDiffusive) {  // modify limiter for diffusion eqn
+	    Eavg = 0.5*(E[k_000] + E[k_00l]);
+	    D0[s_zl] = Limiter(Eavg, Eavg, Opacity[k_000], 
+			       Opacity[k_00l], NiUnits0, LenUnits0, dzi0);
+	    D[s_zl] = Limiter(Eavg, Eavg, Opacity[k_000], 
+			      Opacity[k_00l], NiUnits, LenUnits, dzi);
+	  } else {
+	    D0[s_zl] = Limiter(E[k_000], E[k_00l], Opacity[k_000], 
+			       Opacity[k_00l], NiUnits0, LenUnits0, dzi0);
+	    D[s_zl] = Limiter(E[k_000], E[k_00l], Opacity[k_000], 
+			      Opacity[k_00l], NiUnits, LenUnits, dzi);
+	  }
 	}
 
 	// y-directional limiter, lower face
 	if (rank > 1) {
 	  Ediff[s_yl] = E[k_000] - E[k_0l0];
-	  D0[s_yl] = Limiter(E[k_000], E[k_0l0], Opacity[k_000], 
-			     Opacity[k_0l0], NiUnits0, LenUnits0, dyi0);
-	  D[s_yl] = Limiter(E[k_000], E[k_0l0], Opacity[k_000], 
-			    Opacity[k_0l0], NiUnits, LenUnits, dyi);
+	  if (!XrUv && XrayDiffusive) {  // modify limiter for diffusion eqn
+	    Eavg = 0.5*(E[k_000] + E[k_0l0]);
+	    D0[s_yl] = Limiter(Eavg, Eavg, Opacity[k_000], 
+			       Opacity[k_0l0], NiUnits0, LenUnits0, dyi0);
+	    D[s_yl] = Limiter(Eavg, Eavg, Opacity[k_000], 
+			      Opacity[k_0l0], NiUnits, LenUnits, dyi);
+	  } else {
+	    D0[s_yl] = Limiter(E[k_000], E[k_0l0], Opacity[k_000], 
+			       Opacity[k_0l0], NiUnits0, LenUnits0, dyi0);
+	    D[s_yl] = Limiter(E[k_000], E[k_0l0], Opacity[k_000], 
+			      Opacity[k_0l0], NiUnits, LenUnits, dyi);
+	  }
 	}
 
 	// x-directional limiter, lower face
 	Ediff[s_xl] = E[k_000] - E[k_l00];
-	D0[s_xl] = Limiter(E[k_000], E[k_l00], Opacity[k_000], 
-			   Opacity[k_l00], NiUnits0, LenUnits0, dxi0);
-	D[s_xl] = Limiter(E[k_000], E[k_l00], Opacity[k_000], 
-			  Opacity[k_l00], NiUnits, LenUnits, dxi);
+	if (!XrUv && XrayDiffusive) {  // modify limiter for diffusion eqn
+	  Eavg = 0.5*(E[k_000] + E[k_l00]);
+	  D0[s_xl] = Limiter(Eavg, Eavg, Opacity[k_000], 
+			     Opacity[k_l00], NiUnits0, LenUnits0, dxi0);
+	  D[s_xl] = Limiter(Eavg, Eavg, Opacity[k_000], 
+			    Opacity[k_l00], NiUnits, LenUnits, dxi);
+	} else {
+	  D0[s_xl] = Limiter(E[k_000], E[k_l00], Opacity[k_000], 
+			     Opacity[k_l00], NiUnits0, LenUnits0, dxi0);
+	  D[s_xl] = Limiter(E[k_000], E[k_l00], Opacity[k_000], 
+			    Opacity[k_l00], NiUnits, LenUnits, dxi);
+	}
 
 	// x-directional limiter, upper face
 	Ediff[s_xr] = E[k_r00] - E[k_000];
-	D0[s_xr] = Limiter(E[k_000], E[k_r00], Opacity[k_000], 
-			   Opacity[k_r00], NiUnits0, LenUnits0, dxi0);
-	D[s_xr] = Limiter(E[k_000], E[k_r00], Opacity[k_000], 
-			  Opacity[k_r00], NiUnits, LenUnits, dxi);
+	if (!XrUv && XrayDiffusive) {  // modify limiter for diffusion eqn
+	  Eavg = 0.5*(E[k_000] + E[k_r00]);
+	  D0[s_xr] = Limiter(Eavg, Eavg, Opacity[k_000], 
+			     Opacity[k_r00], NiUnits0, LenUnits0, dxi0);
+	  D[s_xr] = Limiter(Eavg, Eavg, Opacity[k_000], 
+			    Opacity[k_r00], NiUnits, LenUnits, dxi);
+	} else {
+	  D0[s_xr] = Limiter(E[k_000], E[k_r00], Opacity[k_000], 
+			     Opacity[k_r00], NiUnits0, LenUnits0, dxi0);
+	  D[s_xr] = Limiter(E[k_000], E[k_r00], Opacity[k_000], 
+			    Opacity[k_r00], NiUnits, LenUnits, dxi);
+	}
 
 	// y-directional limiter, upper face
 	if (rank > 1) {
 	  Ediff[s_yr] = E[k_0r0] - E[k_000];
-	  D0[s_yr] = Limiter(E[k_000], E[k_0r0], Opacity[k_000], 
-			     Opacity[k_0r0], NiUnits0, LenUnits0, dyi0);
-	  D[s_yr] = Limiter(E[k_000], E[k_0r0], Opacity[k_000], 
-			    Opacity[k_0r0], NiUnits, LenUnits, dyi);
+	  if (!XrUv && XrayDiffusive) {  // modify limiter for diffusion eqn
+	    Eavg = 0.5*(E[k_000] + E[k_0r0]);
+	    D0[s_yr] = Limiter(Eavg, Eavg, Opacity[k_000], 
+			       Opacity[k_0r0], NiUnits0, LenUnits0, dyi0);
+	    D[s_yr] = Limiter(Eavg, Eavg, Opacity[k_000], 
+			      Opacity[k_0r0], NiUnits, LenUnits, dyi);
+	  } else {
+	    D0[s_yr] = Limiter(E[k_000], E[k_0r0], Opacity[k_000], 
+			       Opacity[k_0r0], NiUnits0, LenUnits0, dyi0);
+	    D[s_yr] = Limiter(E[k_000], E[k_0r0], Opacity[k_000], 
+			      Opacity[k_0r0], NiUnits, LenUnits, dyi);
+	  }
 	}
 
 	// z-directional limiter, upper face
 	if (rank > 2) {
 	  Ediff[s_zr] = E[k_00r] - E[k_000];
-	  D0[s_zr] = Limiter(E[k_000], E[k_00r], Opacity[k_000], 
-			     Opacity[k_00r], NiUnits0, LenUnits0, dzi0);
-	  D[s_zr] = Limiter(E[k_000], E[k_00r], Opacity[k_000], 
-			    Opacity[k_00r], NiUnits, LenUnits, dzi);
+	  if (!XrUv && XrayDiffusive) {  // modify limiter for diffusion eqn
+	    Eavg = 0.5*(E[k_000] + E[k_00r]);
+	    D0[s_zr] = Limiter(Eavg, Eavg, Opacity[k_000], 
+			       Opacity[k_00r], NiUnits0, LenUnits0, dzi0);
+	    D[s_zr] = Limiter(Eavg, Eavg, Opacity[k_000], 
+			      Opacity[k_00r], NiUnits, LenUnits, dzi);
+	  } else {
+	    D0[s_zr] = Limiter(E[k_000], E[k_00r], Opacity[k_000], 
+			       Opacity[k_00r], NiUnits0, LenUnits0, dzi0);
+	    D[s_zr] = Limiter(E[k_000], E[k_00r], Opacity[k_000], 
+			      Opacity[k_00r], NiUnits, LenUnits, dzi);
+	  }
 	}
 
 	// opacity values in this cell
@@ -323,9 +371,10 @@ int DualFLD::SetupSystem(HierarchyEntry *ThisGrid, int XrUv, float *E,
 	HYPRE_StructVectorSetBoxValues(solvec, iloc, iloc, &zero);
 	HYPRE_StructMatrixSetBoxValues(P, iloc, iloc, stsize, entries, vals); 
 
-      }  // for i
-    }  // for j
-  }  // for k
+      }  // for i0
+    }  // for i1
+  }  // for i2
+
 
   // assemble HYPRE matrix and vectors
   HYPRE_StructVectorAssemble(solvec);

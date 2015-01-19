@@ -34,6 +34,7 @@ int DualFLD::ReadParameters(TopGridData &MetaData, HierarchyEntry *ThisGrid) {
   int use_uv   = 1;     // enable UV propagation
   int staticXr = 0;     // dynamic Xray radiation
   int staticUV = 0;     // dynamic UV radiation
+  int xr_diff  = 0;     // normal Xray radiation equation
   UVSpectrum  = -1;     // monochromatic spectrum
   UVFrequency = 13.6;   // monochromatic spectrum frequency (eV)
   XrSpectrum  = -1;     // monochromatic spectrum
@@ -107,6 +108,7 @@ int DualFLD::ReadParameters(TopGridData &MetaData, HierarchyEntry *ThisGrid) {
 	ret += sscanf(line, "DualFLDUseUV = %"ISYM, &use_uv);
 	ret += sscanf(line, "DualFLDXrayStatic = %"ISYM, &staticXr);
 	ret += sscanf(line, "DualFLDUVStatic = %"ISYM, &staticUV);
+	ret += sscanf(line, "DualFLDXrayDiffusive = %"ISYM, &xr_diff);
 	ret += sscanf(line, "DualFLDUVSpectrum = %"ISYM, &UVSpectrum);
 	ret += sscanf(line, "DualFLDUVFrequency = %"FSYM, &UVFrequency);
 	ret += sscanf(line, "DualFLDXraySpectrum = %"ISYM, &XrSpectrum);
@@ -212,6 +214,11 @@ int DualFLD::ReadParameters(TopGridData &MetaData, HierarchyEntry *ThisGrid) {
   // set Xray/UV flags based on input values
   UseXray = (use_xray == 1);
   UseUV = (use_uv == 1);
+
+  // set XrayDiffusive flag based on input value; if set, disable temporal accuracy limit
+  XrayDiffusive = (xr_diff == 1);
+  if (XrayDiffusive)  timeAccuracyXr = huge_number;
+
 
   // set static radiation fields based on input values staticXr and staticUV
   XrStatic = (staticXr == 1);

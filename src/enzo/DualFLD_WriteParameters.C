@@ -45,6 +45,11 @@ int DualFLD::WriteParameters(FILE *fptr)
   else
     fprintf(fptr, "DualFLDUVStatic = 0\n");
 
+  if (XrayDiffusive)
+    fprintf(fptr, "DualFLDXrayDiffusive = 1\n");
+  else
+    fprintf(fptr, "DualFLDXrayDiffusive = 0\n");
+
   fprintf(fptr, "DualFLDUVSpectrum = %"ISYM"\n",    UVSpectrum);
   fprintf(fptr, "DualFLDXraySpectrum = %"ISYM"\n",  XrSpectrum);
 

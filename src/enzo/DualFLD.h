@@ -178,6 +178,7 @@ class DualFLD : public virtual ImplicitProblemABC {
   bool  UseUV;         // flag to enable/disable UV radiation
   bool  XrStatic;      // flag to denote a static Xray radiation field
   bool  UVStatic;      // flag to denote a static UV radiation field
+  bool  XrayDiffusive; // flag to enable diffusion equation for Xray radiation
 
   // ionization source parameters
   int   NumSourcesXr;                                  // number of Xray input sources
