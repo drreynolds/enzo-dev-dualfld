@@ -193,14 +193,6 @@ int RadiativeTransferReadParameters(FILE *fptr)
 //     RadiativeCooling = 0;
 //   }
 
-  // If RadiativeTransferFLD > 1, reset RadiationFieldType (if necessary)
-  if (RadiativeTransferFLD > 1  &&  (RadiationFieldType != 0)) {
-    if (MyProcessorNumber == ROOT_PROCESSOR)
-      fprintf(stderr, "Warning: RadiativeTransferFLD > 1 cannot be used with "
-	      "RadiationFieldType != 0.  Resetting RadiationFieldType.\n");
-    RadiationFieldType = 0;
-  }
-
   // If RadiativeTransferFLD > 1, ensure that ImplicitProblem > 0
   if (RadiativeTransferFLD > 1  &&  (ImplicitProblem == 0)) 
     ENZO_FAIL("Error: RadiativeTransferFLD > 1 requires ImplicitProblem > 0!")
