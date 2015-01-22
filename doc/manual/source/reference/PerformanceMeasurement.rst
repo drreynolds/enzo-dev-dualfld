@@ -109,6 +109,7 @@ making sure it is before macros_and_parameters.
 .. code-block:: c
 
   TIMER_START("YourTimerName");
+
 and
 
 .. code-block:: c
@@ -242,7 +243,7 @@ To enable this feature, you can add a flag to your machine's Makefile to explici
 set this preprocessor keyword.  Do this by editing your machine's 
 Makefile to include this flag to your MACH_DEFINES:
 
-.. code-block:: C++
+.. code-block:: c++
 
   MACH_DEFINES = -DMPI_INSTRUMENTATION
 

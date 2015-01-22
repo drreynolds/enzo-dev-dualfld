@@ -190,7 +190,7 @@ Parameters
 Parameter file call: ``HydroMethod = 6``
 
 Method 5: No Hydro
--------------
+--------------------
 
 .. versionadded:: 2.0
 
