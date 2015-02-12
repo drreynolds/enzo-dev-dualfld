@@ -1,0 +1,77 @@
+#
+# DualFLD Parameter File:
+#   cosmological ionization scaling test (similar to the Shapiro &
+#   Giroux, cosmological I-front tests)
+#
+# Daniel R. Reynolds, reynolds@smu.edu
+#
+#############################
+#
+# Specify radiation field(s) to use in solver
+#
+DualFLDUseUV         = 1                    // enable UV radiation
+DualFLDUseXray       = 1                    // enable Xray radiation
+DualFLDUVSpectrum    = -1                   // monochromatic spectrum
+DualFLDUVFrequency   = 13.6                 // radiation frequency [eV]
+DualFLDXraySpectrum  = -1                   // monochromatic spectrum
+DualFLDXrayFrequency = 500.0                // radiation frequency [eV]
+#
+# Specify radiation source(s) to use in solver
+#
+DualFLDNumSourcesUV = 1                     // one ionization source
+DualFLDSourceLocationUV[0] = 0.5 0.5 0.5    // emissivity source location
+DualFLDSourceEnergyUV[0] = 5e48             // emission strength [photons/s]
+DualFLDNumSourcesXray = 1                   // one ionization source
+DualFLDSourceLocationXray[0] = 0.5 0.5 0.5  // emissivity source location
+DualFLDSourceEnergyXray[0] = 5e44           // emission strength [photons/s]
+#
+# Problem-specific initialization parameters
+# 
+DualFLD_Velocity            = 0.0 0.0 0.0   // initial velocity [cm/s]
+DualFLD_Temperature         = 1.0e4         // initial temperature [K]
+DualFLD_UVRadiationEnergy   = 1.0e-35       // initial radiation energy [erg/cm^3]
+DualFLD_XrayRadiationEnergy = 1.0e-50       // initial radiation energy [erg/cm^3]
+DualFLD_OmegaBaryonNow      = 0.2           // baryonic fraction of total Omega
+#
+# Radiation boundary conditions
+# 
+DualFLDUVBoundaryX0Faces   = 0 0            // periodic
+DualFLDUVBoundaryX1Faces   = 0 0
+DualFLDUVBoundaryX2Faces   = 0 0
+DualFLDXrayBoundaryX0Faces = 0 0
+DualFLDXrayBoundaryX1Faces = 0 0
+DualFLDXrayBoundaryX2Faces = 0 0
+#
+# General module and solver parameters
+# 
+DualFLDMaxDt             = 5.0e-2           // largest normalized time step
+DualFLDMinDt             = 1.0e-6           // smallest normalized time step
+DualFLDInitDt            = 1.0e-6           // first time step
+DualFLDAutoScaling       = 0                // disable automatic scaling
+DualFLDWeakScaling       = 1
+#
+# DualFLD UV solver parameters
+# 
+DualFLDUVTimeAccuracy    = 0.002            // 0.2% desired change/step
+DualFLDUVScaling         = 1.0e-3
+DualFLDSolToleranceUV    = 1.0e-4
+DualFLDKrylovMethodUV    = 1
+DualFLDMaxKryItersUV     = 2
+DualFLDMaxMGItersUV      = 3
+DualFLDMGRelaxTypeUV     = 1
+DualFLDPreRelaxUV        = 1
+DualFLDPostRelaxUV       = 1
+#
+# DualFLD X-ray solver parameters
+# 
+#DualFLDXrayTimeAccuracy = 0.01
+DualFLDXrayScaling       = 1.0e-4
+DualFLDSolToleranceXray  = 1.0e-4
+DualFLDKrylovMethodXray  = 1
+DualFLDMaxKryItersXray   = 3
+DualFLDMaxMGItersXray    = 5
+DualFLDMGRelaxTypeXray   = 2
+DualFLDPreRelaxXray      = 3
+DualFLDPostRelaxXray     = 3
+#DualFLDXrayDiffusive     = 1                // disables Xray flux limiter
+#############################
