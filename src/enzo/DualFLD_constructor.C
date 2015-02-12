@@ -32,8 +32,9 @@ DualFLD::DualFLD() {
 #endif
 
   // initialize total RT time to zero
-  RTtime = 0.0;
-  HYPREtime = 0.0;
+  RTtime        = 0.0;
+  HYPREtimeUV   = 0.0;
+  HYPREtimeXray = 0.0;
 
   // initialize HYPRE values to -1/NULL
   mattype          = -1;

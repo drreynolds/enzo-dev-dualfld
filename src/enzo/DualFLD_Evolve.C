@@ -42,6 +42,12 @@
 
 #define SOLUTION_DIAGNOSTICS
 
+#ifdef USE_MPI
+#define TIMER MPI_Wtime()
+#else
+#define TIMER 0.0
+#endif
+
 
 /* function prototypes */
 int CosmologyComputeExpansionFactor(FLOAT time, FLOAT *a, FLOAT *dadt);
@@ -74,11 +80,7 @@ int DualFLD::Evolve(HierarchyEntry *ThisGrid, float dthydro)
 #endif
 
   // start MPI timer for overall solver
-#ifdef USE_MPI
-  float stime = MPI_Wtime();
-#else
-  float stime = 0.0;
-#endif
+  float stime = TIMER;
 
   ////////////////////////////////////
   // Problem Setup Phase
@@ -209,13 +211,6 @@ int DualFLD::Evolve(HierarchyEntry *ThisGrid, float dthydro)
   int maxtries = 100;
   for (radstep=0; radstep<maxtries; radstep++) {
       
-    // start MPI timer for radiation solver
-#ifdef USE_MPI
-    stime2 = MPI_Wtime();
-#else
-    stime2 = 0.0;
-#endif
-
     // update time-step information
     told = tnew;
 
@@ -241,16 +236,25 @@ int DualFLD::Evolve(HierarchyEntry *ThisGrid, float dthydro)
       // Xray evolution
       if (UseXray) {
 	if (!XrStatic) {
+	  stime2 = TIMER;
 	  if (debug)  printf("  Xray:");
 	  recompute_step = this->RadStep(ThisGrid, 0);
+	  ftime2 = TIMER;
+	  HYPREtimeXray += ftime2-stime2;
 	}
       }
+
+    // stop MPI timer for radiation solver, increment total
+    
 
       // UV evolution
       if (!recompute_step && UseUV) {
 	if (!UVStatic) {
+	  stime2 = TIMER;
 	  if (debug)  printf("  UV:");
 	  recompute_step = this->RadStep(ThisGrid, 1);
+	  ftime2 = TIMER;
+	  HYPREtimeUV += ftime2-stime2;
 	}
       }
       
@@ -266,14 +270,6 @@ int DualFLD::Evolve(HierarchyEntry *ThisGrid, float dthydro)
       }
 
     } while (recompute_step);
-    
-    // stop MPI timer for radiation solver, increment total
-#ifdef USE_MPI
-    ftime2 = MPI_Wtime();
-#else
-    ftime2 = 0.0;
-#endif
-    HYPREtime += ftime2-stime2;
     
     // update the radiation time step size for next time step
     //   (limit growth at each cycle)
@@ -351,14 +347,10 @@ int DualFLD::Evolve(HierarchyEntry *ThisGrid, float dthydro)
   }
 
   // stop MPI timer, add to cumulative clock, output to stdout
-#ifdef USE_MPI
-  float ftime = MPI_Wtime();
-#else
-  float ftime = 0.0;
-#endif
+  float ftime = TIMER;
   RTtime += ftime-stime;
-  if (debug)  printf("RadHydro cumulative time = %g (HYPRE = %g)\n\n",
-		     RTtime, HYPREtime);
+  if (debug)  printf("RadHydro cumulative time = %g (HYPRE: UV = %g, Xray = %g)\n\n",
+		     RTtime, HYPREtimeUV, HYPREtimeXray);
 
   return SUCCESS;
 }

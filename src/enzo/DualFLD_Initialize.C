@@ -374,7 +374,8 @@ int DualFLD::Initialize(HierarchyEntry &TopGrid, TopGridData &MetaData) {
 #else
   float ftime = 0.0;
 #endif
-  HYPREtime += ftime-stime;
+  HYPREtimeUV   += ftime-stime;
+  HYPREtimeXray += ftime-stime;
 
 #else  // ifdef USE_HYPRE
 
