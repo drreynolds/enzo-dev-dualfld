@@ -81,7 +81,8 @@ class DualFLD : public virtual ImplicitProblemABC {
   
   // overall time spent in solver and components
   float RTtime;
-  float HYPREtime;
+  float HYPREtimeUV;
+  float HYPREtimeXray;
   
   // HYPRE Struct-specific data
   Eint32 mattype;                // HYPRE matrix type for solve
