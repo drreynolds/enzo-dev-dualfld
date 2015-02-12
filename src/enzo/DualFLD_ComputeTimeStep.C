@@ -172,10 +172,10 @@ float DualFLD::ComputeTimeStep(EnzoVector *uold, EnzoVector *unew) {
 
       if (debug) {
 	printf("  DualFLD_ComputeTimestep (I):\n");
-	if (UseXray)
+	if (UseXray && (timeAccuracyXr != huge_number))
 	  printf("     Xray Err = %8.2e, dt_est = %8.2e (%.1fx change)\n", 
 		 Err_new_Xr, dt_est_Xr, dt_est_Xr/dt);
-	if (UseUV) 
+	if (UseUV && (timeAccuracyUV != huge_number))
 	  printf("       UV Err = %8.2e, dt_est = %8.2e (%.1fx change)\n", 
 		 Err_new_UV, dt_est_UV, dt_est_UV/dt);
       }
@@ -190,10 +190,10 @@ float DualFLD::ComputeTimeStep(EnzoVector *uold, EnzoVector *unew) {
 	dt_est_UV = safety * dt * pow(Err_new_UV,k1) * pow(Err_cur_UV,k2);
       if (debug) {
 	printf("  DualFLD_ComputeTimestep (PI):\n");
-	if (UseXray)
+	if (UseXray && (timeAccuracyXr != huge_number))
 	  printf("     Xray Errs = %8.2e %8.2e, dt_est = %8.2e (%.1fx change)\n", 
 		 Err_new_Xr, Err_cur_Xr, dt_est_Xr, dt_est_Xr/dt);
-	if (UseUV) 
+	if (UseUV && (timeAccuracyUV != huge_number))
 	  printf("       UV Errs = %8.2e %8.2e, dt_est = %8.2e (%.1fx change)\n", 
 		 Err_new_UV, Err_cur_UV, dt_est_UV, dt_est_UV/dt);
       }
@@ -209,10 +209,10 @@ float DualFLD::ComputeTimeStep(EnzoVector *uold, EnzoVector *unew) {
 	dt_est_UV = safety * dt * pow(Err_new_UV,k1) * pow(Err_cur_UV,k2) * pow(Err_old_UV,k3);
       if (debug) {
 	printf("  DualFLD_ComputeTimestep (PID):\n");
-	if (UseXray)
+	if (UseXray && (timeAccuracyXr != huge_number))
 	  printf("     Xray Errs = %8.2e %8.2e %8.2e, dt_est = %8.2e (%.1fx change)\n", 
 		 Err_new_Xr, Err_cur_Xr, Err_old_Xr, dt_est_Xr, dt_est_Xr/dt);
-	if (UseUV) 
+	if (UseUV && (timeAccuracyUV != huge_number))
 	  printf("       UV Errs = %8.2e %8.2e %8.2e, dt_est = %8.2e (%.1fx change)\n", 
 		 Err_new_UV, Err_cur_UV, Err_old_UV, dt_est_UV, dt_est_UV/dt);
       }
@@ -225,10 +225,10 @@ float DualFLD::ComputeTimeStep(EnzoVector *uold, EnzoVector *unew) {
 	dt_est_UV = safety * dt / Err_new_UV;
       if (debug) {
 	printf("  DualFLD_ComputeTimestep (orig):\n");
-	if (UseXray)
+	if (UseXray && (timeAccuracyXr != huge_number))
 	  printf("     Xray Err = %8.2e, dt_est = %8.2e (%.1fx change)\n", 
 		 Err_new_Xr, dt_est_Xr, dt_est_Xr/dt);
-	if (UseUV) 
+	if (UseUV && (timeAccuracyUV != huge_number))
 	  printf("       UV Err = %8.2e, dt_est = %8.2e (%.1fx change)\n", 
 		 Err_new_UV, dt_est_UV, dt_est_UV/dt);
       }
