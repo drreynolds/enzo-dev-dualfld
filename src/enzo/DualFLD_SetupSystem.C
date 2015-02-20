@@ -121,6 +121,43 @@ int DualFLD::SetupSystem(HierarchyEntry *ThisGrid, int XrUv, float *E,
   if (rank > 2)  s_zr = stsize++;
   Eint32 entries[] = {0, 1, 2, 3, 4, 5, 6, 7};
 
+
+  // if using the XrayDiffusive option, determine a mean 
+  // radiation and mean opacity over the domain
+  float Emean=0.0;
+  float kmean=0.0;
+  if (!XrUv && XrayDiffusive) {
+/*#pragma omp for reduction(+:Emean) reduction(+:kmean) schedule(static) default(shared)*/
+    for (int i2=0; i2<LocDims[2]; i2++) {
+      int k2 = GhDims[2][0] + i2;
+      for (int i1=0; i1<LocDims[1]; i1++) { 
+	int k1 = GhDims[1][0] + i1;
+	for (int i0=0; i0<LocDims[0]; i0++) {
+	  int k0 = GhDims[0][0] + i0;
+
+	  // compute indices of neighboring Enzo cells
+	  int k_000 = k0   + ArrDims[0]*(k1   + ArrDims[1]*k2);
+
+	  Emean += E[k_000];
+	  kmean += Opacity[k_000];
+	}
+      }
+    }
+
+    // accumulate average values
+#ifdef USE_MPI
+    float mean_loc[] = {Emean, kmean, 1.0*LocDims[0]*LocDims[1]*LocDims[2]};
+    float mean_full[3];
+    MPI_Datatype DataType = (sizeof(float) == 4) ? MPI_FLOAT : MPI_DOUBLE;
+    MPI_Allreduce(mean_loc, mean_full, 3, DataType, MPI_SUM, MPI_COMM_WORLD);
+    Emean = mean_full[0]/mean_full[2];
+    kmean = mean_full[1]/mean_full[2];
+#else
+    Emean /= (LocDims[0]*LocDims[1]*LocDims[2]);
+    kmean /= (LocDims[0]*LocDims[1]*LocDims[2]);
+#endif
+  }
+
   // iterate over the domain, computing the RHS array
 /*#pragma omp for reduction(+:rhsnorm) schedule(static) default(shared)*/
   for (int i2=0; i2<LocDims[2]; i2++) {
@@ -147,10 +184,8 @@ int DualFLD::SetupSystem(HierarchyEntry *ThisGrid, int XrUv, float *E,
 	  Ediff[s_zl] = E[k_000] - E[k_00l];
 	  if (!XrUv && XrayDiffusive) {  // modify limiter for diffusion eqn
 	    Eavg = 0.5*(E[k_000] + E[k_00l]);
-	    D0[s_zl] = Limiter(Eavg, Eavg, Opacity[k_000], 
-			       Opacity[k_00l], NiUnits0, LenUnits0, dzi0);
-	    D[s_zl] = Limiter(Eavg, Eavg, Opacity[k_000], 
-			      Opacity[k_00l], NiUnits, LenUnits, dzi);
+	    D0[s_zl] = Limiter(Emean, Emean, kmean, kmean, NiUnits0, LenUnits0, dzi0);
+	    D[s_zl] = Limiter(Emean, Emean, kmean, kmean, NiUnits, LenUnits, dzi);
 	  } else {
 	    D0[s_zl] = Limiter(E[k_000], E[k_00l], Opacity[k_000], 
 			       Opacity[k_00l], NiUnits0, LenUnits0, dzi0);
@@ -159,15 +194,18 @@ int DualFLD::SetupSystem(HierarchyEntry *ThisGrid, int XrUv, float *E,
 	  }
 	}
 
+	if ((k0 == 32) && (k1 == 32) && (k2 == 32)) {
+	  printf("z-left flux limiter at (32,32,32) = %g (XrayDiffusive = %i)\n",
+		 D[s_zl], ((!XrUv) && XrayDiffusive));
+	}
+
 	// y-directional limiter, lower face
 	if (rank > 1) {
 	  Ediff[s_yl] = E[k_000] - E[k_0l0];
 	  if (!XrUv && XrayDiffusive) {  // modify limiter for diffusion eqn
 	    Eavg = 0.5*(E[k_000] + E[k_0l0]);
-	    D0[s_yl] = Limiter(Eavg, Eavg, Opacity[k_000], 
-			       Opacity[k_0l0], NiUnits0, LenUnits0, dyi0);
-	    D[s_yl] = Limiter(Eavg, Eavg, Opacity[k_000], 
-			      Opacity[k_0l0], NiUnits, LenUnits, dyi);
+	    D0[s_yl] = Limiter(Emean, Emean, kmean, kmean, NiUnits0, LenUnits0, dyi0);
+	    D[s_yl] = Limiter(Emean, Emean, kmean, kmean, NiUnits, LenUnits, dyi);
 	  } else {
 	    D0[s_yl] = Limiter(E[k_000], E[k_0l0], Opacity[k_000], 
 			       Opacity[k_0l0], NiUnits0, LenUnits0, dyi0);
@@ -180,10 +218,8 @@ int DualFLD::SetupSystem(HierarchyEntry *ThisGrid, int XrUv, float *E,
 	Ediff[s_xl] = E[k_000] - E[k_l00];
 	if (!XrUv && XrayDiffusive) {  // modify limiter for diffusion eqn
 	  Eavg = 0.5*(E[k_000] + E[k_l00]);
-	  D0[s_xl] = Limiter(Eavg, Eavg, Opacity[k_000], 
-			     Opacity[k_l00], NiUnits0, LenUnits0, dxi0);
-	  D[s_xl] = Limiter(Eavg, Eavg, Opacity[k_000], 
-			    Opacity[k_l00], NiUnits, LenUnits, dxi);
+	  D0[s_xl] = Limiter(Emean, Emean, kmean, kmean, NiUnits0, LenUnits0, dxi0);
+	  D[s_xl] = Limiter(Emean, Emean, kmean, kmean, NiUnits, LenUnits, dxi);
 	} else {
 	  D0[s_xl] = Limiter(E[k_000], E[k_l00], Opacity[k_000], 
 			     Opacity[k_l00], NiUnits0, LenUnits0, dxi0);
@@ -195,10 +231,8 @@ int DualFLD::SetupSystem(HierarchyEntry *ThisGrid, int XrUv, float *E,
 	Ediff[s_xr] = E[k_r00] - E[k_000];
 	if (!XrUv && XrayDiffusive) {  // modify limiter for diffusion eqn
 	  Eavg = 0.5*(E[k_000] + E[k_r00]);
-	  D0[s_xr] = Limiter(Eavg, Eavg, Opacity[k_000], 
-			     Opacity[k_r00], NiUnits0, LenUnits0, dxi0);
-	  D[s_xr] = Limiter(Eavg, Eavg, Opacity[k_000], 
-			    Opacity[k_r00], NiUnits, LenUnits, dxi);
+	  D0[s_xr] = Limiter(Emean, Emean, kmean, kmean, NiUnits0, LenUnits0, dxi0);
+	  D[s_xr] = Limiter(Emean, Emean, kmean, kmean, NiUnits, LenUnits, dxi);
 	} else {
 	  D0[s_xr] = Limiter(E[k_000], E[k_r00], Opacity[k_000], 
 			     Opacity[k_r00], NiUnits0, LenUnits0, dxi0);
@@ -211,10 +245,8 @@ int DualFLD::SetupSystem(HierarchyEntry *ThisGrid, int XrUv, float *E,
 	  Ediff[s_yr] = E[k_0r0] - E[k_000];
 	  if (!XrUv && XrayDiffusive) {  // modify limiter for diffusion eqn
 	    Eavg = 0.5*(E[k_000] + E[k_0r0]);
-	    D0[s_yr] = Limiter(Eavg, Eavg, Opacity[k_000], 
-			       Opacity[k_0r0], NiUnits0, LenUnits0, dyi0);
-	    D[s_yr] = Limiter(Eavg, Eavg, Opacity[k_000], 
-			      Opacity[k_0r0], NiUnits, LenUnits, dyi);
+	    D0[s_yr] = Limiter(Emean, Emean, kmean, kmean, NiUnits0, LenUnits0, dyi0);
+	    D[s_yr] = Limiter(Emean, Emean, kmean, kmean, NiUnits, LenUnits, dyi);
 	  } else {
 	    D0[s_yr] = Limiter(E[k_000], E[k_0r0], Opacity[k_000], 
 			       Opacity[k_0r0], NiUnits0, LenUnits0, dyi0);
@@ -228,10 +260,8 @@ int DualFLD::SetupSystem(HierarchyEntry *ThisGrid, int XrUv, float *E,
 	  Ediff[s_zr] = E[k_00r] - E[k_000];
 	  if (!XrUv && XrayDiffusive) {  // modify limiter for diffusion eqn
 	    Eavg = 0.5*(E[k_000] + E[k_00r]);
-	    D0[s_zr] = Limiter(Eavg, Eavg, Opacity[k_000], 
-			       Opacity[k_00r], NiUnits0, LenUnits0, dzi0);
-	    D[s_zr] = Limiter(Eavg, Eavg, Opacity[k_000], 
-			      Opacity[k_00r], NiUnits, LenUnits, dzi);
+	    D0[s_zr] = Limiter(Emean, Emean, kmean, kmean, NiUnits0, LenUnits0, dzi0);
+	    D[s_zr] = Limiter(Emean, Emean, kmean, kmean, NiUnits, LenUnits, dzi);
 	  } else {
 	    D0[s_zr] = Limiter(E[k_000], E[k_00r], Opacity[k_000], 
 			       Opacity[k_00r], NiUnits0, LenUnits0, dzi0);
