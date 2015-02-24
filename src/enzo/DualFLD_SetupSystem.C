@@ -194,10 +194,10 @@ int DualFLD::SetupSystem(HierarchyEntry *ThisGrid, int XrUv, float *E,
 	  }
 	}
 
-	if ((k0 == 32) && (k1 == 32) && (k2 == 32)) {
-	  printf("z-left flux limiter at (32,32,32) = %g (XrayDiffusive = %i)\n",
-		 D[s_zl], ((!XrUv) && XrayDiffusive));
-	}
+	// if ((k0 == 32) && (k1 == 32) && (k2 == 32)) {
+	//   printf("z-left flux limiter at (32,32,32) = %g (XrayDiffusive = %i)\n",
+	// 	 D[s_zl], ((!XrUv) && XrayDiffusive));
+	// }
 
 	// y-directional limiter, lower face
 	if (rank > 1) {
