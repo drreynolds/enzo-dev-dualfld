@@ -78,37 +78,30 @@ for tstep in range(0,te+1):
     yC = 0.5*(pf["DomainLeftEdge"][1] + pf["DomainRightEdge"][1])
     zC = 0.5*(pf["DomainLeftEdge"][2] + pf["DomainRightEdge"][2])
 
-    # generate 2D plots at certain times
-    if (tstep == 1) or (tstep == 5) or (tstep == 10):
+    # set time label
+    tout = repr(tstep).zfill(2)
         
-        # set time label
-        tout = repr(tstep).zfill(2)
+    # begin plot collection (center at (xC,yC,0))
+    pc = PlotCollection(pf, [xC,yC,0.0])
         
-        # begin plot collection (center at (xC,yC,0))
-        pc = PlotCollection(pf, [xC,yC,0.0])
-        
-        # slices through z=0
-        p = pc.add_slice("xHI",'z')
+    # slices through z=0
+    p = pc.add_slice("xHI",'z')
+    p = pc.add_slice("xHII",'z')
+    p = pc.add_slice("logUV",'z')
+    p = pc.add_slice("logXray",'z')
+    pc.save('tstep' + tout, format=pictype)
 
-        p = pc.add_slice("xHII",'z')
-
-        p = pc.add_slice("logUV",'z')
-
-        p = pc.add_slice("logXray",'z')
-
-        pc.save('tstep' + tout, format=pictype)
-
-        # rename generated files
-        f1 = 'tstep' + tout + '_Slice_z_logUV.' + pictype
-        f2 = 'UVcontour_' + tout + '.' + pictype
-        rename(f1,f2)
-        f1 = 'tstep' + tout + '_Slice_z_logXray.' + pictype
-        f2 = 'XrayContour_' + tout + '.' + pictype
-        rename(f1,f2)
-        f1 = 'tstep' + tout + '_Slice_z_xHI.' + pictype
-        f2 = 'HIcontour_' + tout + '.' + pictype
-        rename(f1,f2)
-        f1 = 'tstep' + tout + '_Slice_z_xHII.' + pictype
-        f2 = 'HIIcontour_' + tout + '.' + pictype
-        rename(f1,f2)
+    # rename generated files
+    f1 = 'tstep' + tout + '_Slice_z_logUV.' + pictype
+    f2 = 'UVcontour_' + tout + '.' + pictype
+    rename(f1,f2)
+    f1 = 'tstep' + tout + '_Slice_z_logXray.' + pictype
+    f2 = 'XrayContour_' + tout + '.' + pictype
+    rename(f1,f2)
+    f1 = 'tstep' + tout + '_Slice_z_xHI.' + pictype
+    f2 = 'HIcontour_' + tout + '.' + pictype
+    rename(f1,f2)
+    f1 = 'tstep' + tout + '_Slice_z_xHII.' + pictype
+    f2 = 'HIIcontour_' + tout + '.' + pictype
+    rename(f1,f2)
 
