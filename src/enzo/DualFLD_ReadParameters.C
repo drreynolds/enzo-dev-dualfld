@@ -34,7 +34,8 @@ int DualFLD::ReadParameters(TopGridData &MetaData, HierarchyEntry *ThisGrid) {
   int use_uv   = 1;     // enable UV propagation
   int staticXr = 0;     // dynamic Xray radiation
   int staticUV = 0;     // dynamic UV radiation
-  int xr_diff  = 0;     // normal Xray radiation equation
+  // int xr_diff  = 0;     // normal Xray radiation equation
+  int xr_diff  = 1;     // diffusive Xray radiation equation
   UVSpectrum  = -1;     // monochromatic spectrum
   UVFrequency = 13.6;   // monochromatic spectrum frequency (eV)
   XrSpectrum  = -1;     // monochromatic spectrum
@@ -56,11 +57,14 @@ int DualFLD::ReadParameters(TopGridData &MetaData, HierarchyEntry *ThisGrid) {
     }
 
   // set default solver parameters
-  sol_tolerance_Xr   = 1.0e-5;    // HYPRE solver tolerance
+  // sol_tolerance_Xr   = 1.0e-5;    // HYPRE solver tolerance
+  sol_tolerance_Xr   = 1.0e-4;    // HYPRE solver tolerance
   sol_tolerance_UV   = 1.0e-5;
-  sol_MGmaxit_Xr     = 5;         // HYPRE max multigrid iters
+  // sol_MGmaxit_Xr     = 5;         // HYPRE max multigrid iters
+  sol_MGmaxit_Xr     = 1;         // HYPRE max multigrid iters
   sol_MGmaxit_UV     = 3;
-  sol_KryMaxit_Xr    = 3;         // HYPRE max Krylov iters
+  // sol_KryMaxit_Xr    = 3;         // HYPRE max Krylov iters
+  sol_KryMaxit_Xr    = 1;         // HYPRE max Krylov iters
   sol_KryMaxit_UV    = 2;
   sol_rlxtype_Xr     = 2;         // HYPRE relaxation type
   sol_rlxtype_UV     = 1;
